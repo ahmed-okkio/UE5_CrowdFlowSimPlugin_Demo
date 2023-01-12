@@ -1,0 +1,24 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "CrowdFlow",
+	"Description": "Demonstration of an AEC (Arcitecture Engineering and Consutrction) application, Crowd Flow Simulation,  through UE plugins",
+	"Category": "Other",
+	"CreatedBy": "Ahmed Hamad",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"CanContainContent": true,
+	"IsBetaVersion": true,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "CrowdFlow",
+			"Type": "Editor",
+			"LoadingPhase": "Default"
+		}
+	]
+}
