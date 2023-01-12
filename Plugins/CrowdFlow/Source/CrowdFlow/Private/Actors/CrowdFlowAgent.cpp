@@ -28,24 +28,36 @@ void ACrowdFlowAgent::BeginPlay()
 	if (StaticMesh)
 	{
 	}
+	MoveTowardsDirection(SphereComponent->GetForwardVector(), 5);
 	
 }
 
 void ACrowdFlowAgent::MoveTowardsDirection(FVector Direction, int32 Units)
 {
-	GetWorld()->GetTimerManager().SetTimer(TH_Movement, this, &ASBombActor::OnExplode, MaxFuzeTime, false);
-	SphereComponent->SetWorldLocation(SphereComponent->GetComponentLocation() + Direction * Units);
+	float Speed = 0.001;
+	FTimerDelegate Delegate;
+	Delegate.BindUFunction(this, "UpdateMovement", Direction, Units);
+	GetWorld()->GetTimerManager().SetTimer(TH_Movement, Delegate, Speed, true);
 }
 
 void ACrowdFlowAgent::UpdateMovement(FVector Direction, int32 Units)
 {
+	if (Units > 0)
+	{
+		SphereComponent->SetWorldLocation(SphereComponent->GetComponentLocation() + Direction * 1);
+		Units--;
+	}
+	else
+	{
+		GetWorld()->GetTimerManager().ClearTimer(TH_Movement);
+	}
 }
 
 // Called every frame
 void ACrowdFlowAgent::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	MoveTowardsDirection(SphereComponent->GetForwardVector(), 5);
+	//MoveTowardsDirection(SphereComponent->GetForwardVector(), 5);
 
 }
 

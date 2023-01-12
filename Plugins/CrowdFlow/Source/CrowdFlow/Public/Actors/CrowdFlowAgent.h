@@ -26,6 +26,7 @@ protected:
 	class UStaticMesh* StaticMesh;
 
 	FTimerHandle TH_Movement;
+	UFUNCTION()
 	void UpdateMovement(FVector Direction, int32 Units);
 
 public:	
