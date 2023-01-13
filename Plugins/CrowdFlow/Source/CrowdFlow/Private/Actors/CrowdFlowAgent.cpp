@@ -40,6 +40,10 @@ void ACrowdFlowAgent::MoveTowardsDirection(FVector Direction, int32 Units)
 	GetWorld()->GetTimerManager().SetTimer(TH_Movement, Delegate, Speed, true);
 }
 
+void ACrowdFlowAgent::CalculatePossibleMoves()
+{
+}
+
 void ACrowdFlowAgent::UpdateMovement(FVector Direction, int32 Units)
 {
 	if (Units > 0)

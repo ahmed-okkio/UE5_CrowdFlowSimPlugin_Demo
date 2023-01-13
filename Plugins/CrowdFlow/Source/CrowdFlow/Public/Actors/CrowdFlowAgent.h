@@ -26,6 +26,11 @@ protected:
 	class UStaticMesh* StaticMesh;
 
 	FTimerHandle TH_Movement;
+
+	float TurnSmoothness = 8.0; 
+
+	void CalculatePossibleMoves();
+
 	UFUNCTION()
 	void UpdateMovement(FVector Direction, int32 Units);
 
