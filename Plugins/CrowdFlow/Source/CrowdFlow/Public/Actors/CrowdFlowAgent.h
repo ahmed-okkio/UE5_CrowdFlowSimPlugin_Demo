@@ -6,6 +6,21 @@
 #include "GameFramework/Actor.h"
 #include "CrowdFlowAgent.generated.h"
 
+USTRUCT()
+struct FMove
+{
+	GENERATED_BODY()
+
+	FVector Direction;
+	int32 Units;
+
+	FMove()
+	{
+		Direction = FVector(0, 0, 0);
+		Units = 0;
+	}
+};
+
 UCLASS()
 class ACrowdFlowAgent : public AActor
 {
@@ -21,20 +36,37 @@ protected:
 
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 	void MoveTowardsDirection(FVector Direction, int32 Units);
+	
+	void MoveTowardsBestMove();
+	
+	bool IsBestMove(FMove NewMove) const;
+
 
 	UPROPERTY(EditAnywhere)
 	class UStaticMesh* StaticMesh;
 
 	FTimerHandle TH_Movement;
 
-	float TurnSmoothness = 8.0; 
+	float TurnSmoothness = 8.0;
+	
+	UPROPERTY(EditInstanceOnly)
+	float UnitsPerMove = 25.0;
+	
+	TArray<FMove> PossibleMoves;
+	
+	FMove BestMove;
 
 	void CalculatePossibleMoves();
+
+	void SelectBestMove();
 
 	UFUNCTION()
 	void UpdateMovement(FVector Direction, int32 Units);
 
 public:	
+	UFUNCTION(BlueprintCallable, Category = "Movement")
+	int32 GetCurrentUnitsLeft();
+	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
@@ -45,4 +77,6 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 	int32 GetDistanceToExit();
+	
+	int32 CurrentUnitsLeft = 0;
 };
