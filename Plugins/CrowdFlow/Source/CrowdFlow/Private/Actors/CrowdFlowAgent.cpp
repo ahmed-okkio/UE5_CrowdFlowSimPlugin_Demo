@@ -28,6 +28,8 @@ void ACrowdFlowAgent::BeginPlay()
 	if (StaticMesh)
 	{
 	}
+	SphereRadius = SphereComponent->GetStaticMesh()->GetBounds().SphereRadius;
+
 	CalculatePossibleMoves();
 	MoveTowardsBestMove();
 	//MoveTowardsDirection(SphereComponent->GetForwardVector(), 5);
@@ -60,9 +62,9 @@ void ACrowdFlowAgent::MoveTowardsBestMove()
 
 void ACrowdFlowAgent::CalculatePossibleMoves()
 {
+	BestMove = FMove();
 	FVector ForwardVector = GetActorForwardVector();
 	float DegreesBetweenMove = 360 / TurnSmoothness;
-	bool NoNewMoves = true;
 	for (int32 i = 0; i < 360; i += DegreesBetweenMove)
 	{
 		FMove NewMove;
@@ -73,14 +75,9 @@ void ACrowdFlowAgent::CalculatePossibleMoves()
 		if (IsBestMove(NewMove))
 		{
 			BestMove = NewMove;
-			NoNewMoves = false;
 		}
 
 		PossibleMoves.Add(NewMove);
-	}
-	if (NoNewMoves)
-	{
-		BestMove = FMove();
 	}
 }
 
@@ -89,8 +86,8 @@ bool ACrowdFlowAgent::IsBestMove(FMove NewMove) const
 	
 	FVector CurrentLocation = SphereComponent->GetComponentLocation();
 
-	FVector BestMoveLocation = CurrentLocation + BestMove.Direction * BestMove.Units;
-	FVector NewMoveLocation = CurrentLocation + NewMove.Direction * NewMove.Units;
+	FVector BestMoveLocation = CurrentLocation + BestMove.Direction * BestMove.Units + SphereRadius;
+	FVector NewMoveLocation = CurrentLocation + NewMove.Direction * NewMove.Units + SphereRadius;
 
 	float BestMoveDistance = FVector::Distance(BestMoveLocation, ExitLocation);
 	float NewMoveDistance = FVector::Distance(NewMoveLocation, ExitLocation);
@@ -98,7 +95,7 @@ bool ACrowdFlowAgent::IsBestMove(FMove NewMove) const
 	
 	FHitResult Hit;
 	GetWorld()->LineTraceSingleByChannel(Hit, CurrentLocation, NewMoveLocation, ECollisionChannel::ECC_PhysicsBody);
-	DrawDebugLine(GetWorld(), CurrentLocation, NewMoveLocation, Hit.bBlockingHit ? FColor::Blue : FColor::Red, false, 5.0f, -1, 10.0f);
+	//DrawDebugLine(GetWorld(), CurrentLocation, NewMoveLocation, Hit.bBlockingHit ? FColor::Blue : FColor::Red, false, 5.0f, -1, 10.0f);
 
 	if (Hit.bBlockingHit)
 	{
@@ -107,7 +104,9 @@ bool ACrowdFlowAgent::IsBestMove(FMove NewMove) const
 
 	if (BestMove.Units == 0)
 	{
+		//DrawDebugLine(GetWorld(), CurrentLocation, NewMoveLocation, FColor::Purple, false, 5.0f, -1, 10.0f);
 		return true;
+
 	}
 
 	if (NewMoveDistance > BestMoveDistance)
@@ -115,6 +114,7 @@ bool ACrowdFlowAgent::IsBestMove(FMove NewMove) const
 		return false;
 	}
 
+	DrawDebugLine(GetWorld(), CurrentLocation, NewMoveLocation, FColor::Green, false, 5.0f, -1, 10.0f);
 
 	return true;
 }

@@ -48,6 +48,8 @@ protected:
 	FTimerHandle TH_Movement;
 
 	float TurnSmoothness = 8.0;
+
+	float SphereRadius;
 	
 	UPROPERTY(EditInstanceOnly)
 	float UnitsPerMove = 25.0;
