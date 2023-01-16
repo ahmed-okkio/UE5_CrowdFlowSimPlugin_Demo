@@ -86,8 +86,8 @@ bool ACrowdFlowAgent::IsBestMove(FMove NewMove) const
 	
 	FVector CurrentLocation = SphereComponent->GetComponentLocation();
 
-	FVector BestMoveLocation = CurrentLocation + BestMove.Direction * BestMove.Units + SphereRadius;
-	FVector NewMoveLocation = CurrentLocation + NewMove.Direction * NewMove.Units + SphereRadius;
+	FVector BestMoveLocation = CurrentLocation + BestMove.Direction * (BestMove.Units + SphereRadius);
+	FVector NewMoveLocation = CurrentLocation + NewMove.Direction * (NewMove.Units + SphereRadius);
 
 	float BestMoveDistance = FVector::Distance(BestMoveLocation, ExitLocation);
 	float NewMoveDistance = FVector::Distance(NewMoveLocation, ExitLocation);
@@ -95,7 +95,7 @@ bool ACrowdFlowAgent::IsBestMove(FMove NewMove) const
 	
 	FHitResult Hit;
 	GetWorld()->LineTraceSingleByChannel(Hit, CurrentLocation, NewMoveLocation, ECollisionChannel::ECC_PhysicsBody);
-	//DrawDebugLine(GetWorld(), CurrentLocation, NewMoveLocation, Hit.bBlockingHit ? FColor::Blue : FColor::Red, false, 5.0f, -1, 10.0f);
+	DrawDebugLine(GetWorld(), CurrentLocation, NewMoveLocation, Hit.bBlockingHit ? FColor::Blue : FColor::Red, false, 5.0f, -1, 10.0f);
 
 	if (Hit.bBlockingHit)
 	{
@@ -104,7 +104,7 @@ bool ACrowdFlowAgent::IsBestMove(FMove NewMove) const
 
 	if (BestMove.Units == 0)
 	{
-		//DrawDebugLine(GetWorld(), CurrentLocation, NewMoveLocation, FColor::Purple, false, 5.0f, -1, 10.0f);
+		DrawDebugLine(GetWorld(), CurrentLocation, NewMoveLocation, FColor::Purple, false, 5.0f, -1, 10.0f);
 		return true;
 
 	}
@@ -114,7 +114,7 @@ bool ACrowdFlowAgent::IsBestMove(FMove NewMove) const
 		return false;
 	}
 
-	DrawDebugLine(GetWorld(), CurrentLocation, NewMoveLocation, FColor::Green, false, 5.0f, -1, 10.0f);
+	DrawDebugLine(GetWorld(), CurrentLocation, NewMoveLocation, FColor::Green, false, 5.0f, -2, 10.0f);
 
 	return true;
 }

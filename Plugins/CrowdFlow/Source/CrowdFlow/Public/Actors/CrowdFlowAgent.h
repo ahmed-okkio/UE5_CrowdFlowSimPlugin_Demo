@@ -47,12 +47,12 @@ protected:
 
 	FTimerHandle TH_Movement;
 
-	float TurnSmoothness = 8.0;
+	float TurnSmoothness = 4.0;
 
 	float SphereRadius;
 	
 	UPROPERTY(EditInstanceOnly)
-	float UnitsPerMove = 25.0;
+	float UnitsPerMove = 100.0;
 	
 	TArray<FMove> PossibleMoves;
 	
@@ -75,7 +75,7 @@ public:
 	UPROPERTY(EditAnywhere)
 	class UStaticMeshComponent* SphereComponent;
 
-	FVector ExitLocation = FVector(2084.618557,2006.420626,14.686587);
+	FVector ExitLocation = FVector(2084.618557, 3376.420626, 14.686587);
 	
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 	int32 GetDistanceToExit();
