@@ -18,6 +18,8 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	UPROPERTY(EditAnywhere)
+	class ATriggerVolume* TriggerVolume;
 
 public:	
 	// Called every frame

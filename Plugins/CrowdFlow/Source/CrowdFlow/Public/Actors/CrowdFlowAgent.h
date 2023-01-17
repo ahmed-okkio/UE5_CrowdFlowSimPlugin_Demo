@@ -47,7 +47,7 @@ protected:
 
 	FTimerHandle TH_Movement;
 
-	float TurnSmoothness = 4.0;
+	float TurnSmoothness = 8.0;
 
 	float SphereRadius;
 	
