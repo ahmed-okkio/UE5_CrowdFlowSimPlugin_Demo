@@ -18,8 +18,23 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	bool PostEditMoveHasBeenCalled = false;
+
 	UPROPERTY(EditAnywhere)
 	class ATriggerVolume* TriggerVolume;
+
+	class UArrowComponent* ForwardArrow;
+
+	UPROPERTY(EditAnywhere)
+	FVector BoundingBox;
+
+
+	virtual void OnConstruction(const FTransform& Transform) override;
+#if WITH_EDITOR
+	virtual void PostEditMove(bool bFinished) override;
+#endif
+
 
 public:	
 	// Called every frame
