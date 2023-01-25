@@ -4,6 +4,7 @@
 #include "Actors/CrowdFlowAgent.h"
 #include "Components/StaticMeshComponent.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Actors/CrowdFlowExitSign.h"
 
 // Sets default values
 ACrowdFlowAgent::ACrowdFlowAgent()
@@ -95,7 +96,7 @@ bool ACrowdFlowAgent::IsBestMove(FMove NewMove) const
 	
 	FHitResult Hit;
 	GetWorld()->LineTraceSingleByChannel(Hit, CurrentLocation, NewMoveLocation, ECollisionChannel::ECC_PhysicsBody);
-	DrawDebugLine(GetWorld(), CurrentLocation, NewMoveLocation, Hit.bBlockingHit ? FColor::Blue : FColor::Red, false, 5.0f, -1, 10.0f);
+	//DrawDebugLine(GetWorld(), CurrentLocation, NewMoveLocation, Hit.bBlockingHit ? FColor::Blue : FColor::Red, false, 5.0f, -1, 10.0f);
 
 	if (Hit.bBlockingHit)
 	{
@@ -104,7 +105,7 @@ bool ACrowdFlowAgent::IsBestMove(FMove NewMove) const
 
 	if (BestMove.Units == 0)
 	{
-		DrawDebugLine(GetWorld(), CurrentLocation, NewMoveLocation, FColor::Purple, false, 5.0f, -1, 10.0f);
+		//DrawDebugLine(GetWorld(), CurrentLocation, NewMoveLocation, FColor::Purple, false, 5.0f, -1, 10.0f);
 		return true;
 
 	}
@@ -114,13 +115,44 @@ bool ACrowdFlowAgent::IsBestMove(FMove NewMove) const
 		return false;
 	}
 
-	DrawDebugLine(GetWorld(), CurrentLocation, NewMoveLocation, FColor::Green, false, 5.0f, -2, 10.0f);
+	//DrawDebugLine(GetWorld(), CurrentLocation, NewMoveLocation, FColor::Green, false, 5.0f, -2, 10.0f);
 
 	return true;
 }
 
 void ACrowdFlowAgent::SelectBestMove()
 {
+
+}
+
+void ACrowdFlowAgent::MoveToLocation(const FVector Destination)
+{
+	FVector CurrentLocation = GetActorLocation();
+	int32 Units = (int32) FVector::Distance(CurrentLocation, Destination);
+	FVector Direction = (Destination - CurrentLocation);
+	Direction.Normalize();
+	float Speed = 0.001;
+	CurrentUnitsLeft = Units;
+	FTimerDelegate Delegate;
+	Delegate.BindUFunction(this, "UpdateMovement", Direction, Units);
+	GetWorld()->GetTimerManager().SetTimer(TH_Movement, Delegate, Speed, true);
+}
+
+void ACrowdFlowAgent::MoveToExitSign(ACrowdFlowExitSign* ExitSign)
+{
+	// Don't move to this sign if we have already moved to it before.
+	if (ExitSign == VisibleExitSign)
+	{
+		return;
+	}
+
+	GetWorld()->GetTimerManager().ClearTimer(TH_Movement);
+	VisibleExitSign = ExitSign;
+
+	if (VisibleExitSign)
+	{
+		MoveToLocation(VisibleExitSign->GetExitSignDestination());
+	}
 
 }
 

@@ -6,6 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "CrowdFlowAgent.generated.h"
 
+class ACrowdFlowExitSign;
+
 USTRUCT()
 struct FMove
 {
@@ -58,6 +60,8 @@ protected:
 	
 	FMove BestMove;
 
+	ACrowdFlowExitSign* VisibleExitSign = nullptr;
+
 	void CalculatePossibleMoves();
 
 	void SelectBestMove();
@@ -77,8 +81,12 @@ public:
 
 	FVector ExitLocation = FVector(2084.618557, 3376.420626, 14.686587);
 	
+	int32 CurrentUnitsLeft = 0;
+
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 	int32 GetDistanceToExit();
-	
-	int32 CurrentUnitsLeft = 0;
+
+	void MoveToLocation(const FVector Destination);
+
+	void MoveToExitSign(ACrowdFlowExitSign* ExitSign);
 };

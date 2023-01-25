@@ -26,6 +26,8 @@ void ACrowdFlowExitSign::BeginPlay()
 {
 	Super::BeginPlay();
 	ForwardArrow = FindComponentByClass<UArrowComponent>();
+
+	ExitSignAgentDestination = GetActorLocation() + (ForwardArrow->GetForwardVector() * 50);
 	BeginTraceForAgents();
 
 }
@@ -41,12 +43,12 @@ void ACrowdFlowExitSign::TraceForAgents()
 	{
 		FVector Center = GetActorLocation() + (ForwardArrow->GetForwardVector() * BoundingBox.X);
 		FRotator Rotation = ForwardArrow->GetForwardVector().Rotation();
-		FHitResult Hit;
+		FHitResult HitResult;
 		TArray<TEnumAsByte<EObjectTypeQuery>> HitObjectTypes;
 		TArray<AActor*, FDefaultAllocator> ignoredActors;
 
 		HitObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_PhysicsBody));
-		UKismetSystemLibrary::BoxTraceSingleForObjects(
+		bool bHit = UKismetSystemLibrary::BoxTraceSingleForObjects(
 			GetWorld(),
 			Center,
 			Center,
@@ -56,12 +58,23 @@ void ACrowdFlowExitSign::TraceForAgents()
 			false,
 			ignoredActors,
 			EDrawDebugTrace::ForDuration,
-			Hit,
+			HitResult,
 			true,
 			FLinearColor::Blue,
 			FLinearColor::Green,
 			TraceRate
 		);
+
+		if (bHit)
+		{
+			ACrowdFlowAgent* Agent = (ACrowdFlowAgent*) HitResult.GetActor();
+			if (!Agent)
+			{
+				return;
+			}
+	
+			Agent->MoveToExitSign(this);
+		}
 	}
 }
 
@@ -75,5 +88,10 @@ void ACrowdFlowExitSign::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+}
+
+FVector ACrowdFlowExitSign::GetExitSignDestination() const
+{
+	return ExitSignAgentDestination;
 }
 

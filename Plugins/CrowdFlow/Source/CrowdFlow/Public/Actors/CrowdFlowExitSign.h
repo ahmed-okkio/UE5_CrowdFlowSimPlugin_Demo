@@ -24,6 +24,8 @@ protected:
 	UPROPERTY(EditAnywhere)
 	FVector BoundingBox;
 
+	FVector ExitSignAgentDestination;
+
 	FTimerHandle TH_AgentTrace;
 
 	UPROPERTY(EditDefaultsOnly)
@@ -38,5 +40,7 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	FVector GetExitSignDestination() const;
 
 };
