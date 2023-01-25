@@ -7,7 +7,9 @@
 #include "Components/SceneComponent.h"
 #include "DrawDebugHelpers.h"
 #include "Components/ArrowComponent.h"
-
+#include "CollisionDebugDrawingPublic.h"
+#include "Kismet/KismetSystemLibrary.h"
+#include "Actors/CrowdFlowAgent.h"
 
 // Sets default values
 ACrowdFlowExitSign::ACrowdFlowExitSign()
@@ -17,64 +19,56 @@ ACrowdFlowExitSign::ACrowdFlowExitSign()
 	BoundingBox = FVector(1, 1, 1);
 
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
-
-	//TriggerVolume = CreateDefaultSubobject<ATriggerVolume>(TEXT("TriggerVolume"));
-	//TriggerVolume->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
-	
-	//TriggerBoxBrush = TriggerVolume->Brush;
-	//TriggerVolume->Brush = TriggerBoxBrush;
 }
 
 // Called when the game starts or when spawned
 void ACrowdFlowExitSign::BeginPlay()
 {
 	Super::BeginPlay();
-	FVector StartLocation = GetActorLocation() + (GetActorForwardVector() * 100);
-	FVector EndLocation = GetActorForwardVector() * 10000	;
-	FHitResult Hit;
-	//GetWorld()->LineTraceSingleByChannel(Hit, GetActorLocation(), EndLocation, ECollisionChannel::ECC_PhysicsBody);
-	//DrawDebugLine(GetWorld(), GetActorLocation(), EndLocation, FColor::Red, false, 5.0f, -1, 10.0f);
 	ForwardArrow = FindComponentByClass<UArrowComponent>();
+	BeginTraceForAgents();
+
+}
+
+void ACrowdFlowExitSign::BeginTraceForAgents()
+{
+	GetWorld()->GetTimerManager().SetTimer(TH_AgentTrace, this, &ACrowdFlowExitSign::TraceForAgents, TraceRate, true);	
+}
+
+void ACrowdFlowExitSign::TraceForAgents()
+{
 	if (ForwardArrow)
 	{
-		FVector Center = GetActorLocation() + ForwardArrow->GetForwardVector() * BoundingBox.Y;
-		DrawDebugBox(GetWorld(), Center, BoundingBox, FColor::Green, true);
-	}
-	//GetWorld()->BoxTraceByCHannel
+		FVector Center = GetActorLocation() + (ForwardArrow->GetForwardVector() * BoundingBox.X);
+		FRotator Rotation = ForwardArrow->GetForwardVector().Rotation();
+		FHitResult Hit;
+		TArray<TEnumAsByte<EObjectTypeQuery>> HitObjectTypes;
+		TArray<AActor*, FDefaultAllocator> ignoredActors;
 
-		
+		HitObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_PhysicsBody));
+		UKismetSystemLibrary::BoxTraceSingleForObjects(
+			GetWorld(),
+			Center,
+			Center,
+			BoundingBox,
+			Rotation,
+			HitObjectTypes,
+			false,
+			ignoredActors,
+			EDrawDebugTrace::ForDuration,
+			Hit,
+			true,
+			FLinearColor::Blue,
+			FLinearColor::Green,
+			TraceRate
+		);
+	}
 }
 
-void ACrowdFlowExitSign::OnConstruction(const FTransform& Transform)
+void ACrowdFlowExitSign::StopTraceForAgents()
 {
-	Super::OnConstruction(Transform);
-	
-
+	GetWorld()->GetTimerManager().ClearTimer(TH_AgentTrace);
 }
-
-#if WITH_EDITOR
-void ACrowdFlowExitSign::PostEditMove(bool bFinished)
-{
-	// Only call this a single time when an actor is first placed (moved) in a level
-	if (false == PostEditMoveHasBeenCalled)
-	{
-		// The stuff you want to do when you place an actor in the level goes here
-
-		PostEditMoveHasBeenCalled = true;
-	}
-	Super::PostEditMove(bFinished);
-	if (!TriggerVolume)
-	{
-		TriggerVolume = GetWorld()->SpawnActor<ATriggerVolume>(ATriggerVolume::StaticClass(), FActorSpawnParameters());
-	}
-
-	ForwardArrow = FindComponentByClass<UArrowComponent>();
-	if (ForwardArrow)
-	{
-		ForwardArrow->GetForwardVector();
-	}
-}
-#endif
 
 // Called every frame
 void ACrowdFlowExitSign::Tick(float DeltaTime)
