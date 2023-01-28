@@ -28,6 +28,9 @@ protected:
 
 	FTimerHandle TH_AgentTrace;
 
+	UPROPERTY(EditInstanceOnly)
+	float AgentDestinationDistanceFromSign = 150.0f;
+
 	UPROPERTY(EditDefaultsOnly)
 	float TraceRate = 0.2f;
 

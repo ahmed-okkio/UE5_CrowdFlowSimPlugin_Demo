@@ -27,7 +27,7 @@ void ACrowdFlowExitSign::BeginPlay()
 	Super::BeginPlay();
 	ForwardArrow = FindComponentByClass<UArrowComponent>();
 
-	ExitSignAgentDestination = GetActorLocation() + (ForwardArrow->GetForwardVector() * 50);
+	ExitSignAgentDestination = GetActorLocation() + (ForwardArrow->GetForwardVector() * AgentDestinationDistanceFromSign);
 	BeginTraceForAgents();
 
 }

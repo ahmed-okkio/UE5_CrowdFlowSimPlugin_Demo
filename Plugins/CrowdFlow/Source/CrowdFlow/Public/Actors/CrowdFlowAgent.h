@@ -33,38 +33,48 @@ public:
 	ACrowdFlowAgent();
 
 protected:
+	UPROPERTY(EditInstanceOnly)
+	float UnitsPerMove = 100.0f;
+	
+	UPROPERTY(EditDefaultsOnly)
+	float ExitReachedRange = 100.0f;
+	
+	UPROPERTY(EditDefaultsOnly)
+	float DirectMoveSearchRate=  0.5f;
+	
+	float TurnSmoothness = 8.0f;
+
+	float SphereRadius;
+
+	bool LookingForExit = false;
+	
+	FMove NextMove;
+	
+	TArray<FMove> PossibleMoves;
+	
+	ACrowdFlowExitSign* VisibleExitSign = nullptr;
+	
+	FTimerHandle TH_Movement;
+	
+	FTimerHandle TH_DirectMove;
+	
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 	void MoveTowardsDirection(FVector Direction, int32 Units);
 	
-	void MoveTowardsBestMove();
+	bool IsExitVisible() const;
+	
+	void AttemptDirectMoveToExit();
+
+	void BeginLookingForDirectMoveToExit();
+	
+	void CalculateNextMove();
 	
 	bool IsBestMove(FMove NewMove) const;
-
-
-	UPROPERTY(EditAnywhere)
-	class UStaticMesh* StaticMesh;
-
-	FTimerHandle TH_Movement;
-
-	float TurnSmoothness = 8.0;
-
-	float SphereRadius;
 	
-	UPROPERTY(EditInstanceOnly)
-	float UnitsPerMove = 100.0;
-	
-	TArray<FMove> PossibleMoves;
-	
-	FMove BestMove;
-
-	ACrowdFlowExitSign* VisibleExitSign = nullptr;
-
-	void CalculatePossibleMoves();
-
-	void SelectBestMove();
+	void ExecuteNextMove();
 
 	UFUNCTION()
 	void UpdateMovement(FVector Direction, int32 Units);
@@ -79,7 +89,7 @@ public:
 	UPROPERTY(EditAnywhere)
 	class UStaticMeshComponent* SphereComponent;
 
-	FVector ExitLocation = FVector(2084.618557, 3376.420626, 14.686587);
+	FVector ExitLocation;
 	
 	int32 CurrentUnitsLeft = 0;
 

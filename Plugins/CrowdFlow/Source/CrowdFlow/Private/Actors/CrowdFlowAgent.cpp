@@ -5,6 +5,8 @@
 #include "Components/StaticMeshComponent.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Actors/CrowdFlowExitSign.h"
+#include "Actors/CrowdFlowExit.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 ACrowdFlowAgent::ACrowdFlowAgent()
@@ -15,7 +17,6 @@ ACrowdFlowAgent::ACrowdFlowAgent()
 
 		SphereComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Sphere"));
 		RootComponent = SphereComponent;
-		//SphereComponent->SetStaticMesh(StaticMesh);
 		static ConstructorHelpers::FObjectFinder<UStaticMesh>SphereMeshAsset(TEXT("StaticMesh'/Engine/BasicShapes/Sphere.Sphere'"));
 		SphereComponent->SetStaticMesh(SphereMeshAsset.Object);
 		
@@ -26,44 +27,52 @@ ACrowdFlowAgent::ACrowdFlowAgent()
 void ACrowdFlowAgent::BeginPlay()
 {
 	Super::BeginPlay();
-	if (StaticMesh)
+	
+	TArray<AActor*> AllActors;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACrowdFlowExit::StaticClass(), AllActors);
+	
+	if (AllActors[0])
 	{
+		ExitLocation = AllActors[0]->GetActorLocation();
 	}
 	SphereRadius = SphereComponent->GetStaticMesh()->GetBounds().SphereRadius;
-
-	CalculatePossibleMoves();
-	MoveTowardsBestMove();
-	//MoveTowardsDirection(SphereComponent->GetForwardVector(), 5);
 	
+	BeginLookingForDirectMoveToExit();
+	CalculateNextMove();
+	ExecuteNextMove();
 }
 
-void ACrowdFlowAgent::MoveTowardsDirection(FVector Direction, int32 Units)
+bool ACrowdFlowAgent::IsExitVisible() const
 {
-	if (GetDistanceToExit() == 0)
+	FHitResult Hit;
+	GetWorld()->LineTraceSingleByChannel(Hit, GetActorLocation(), ExitLocation, ECollisionChannel::ECC_WorldStatic);
+	return !Hit.bBlockingHit;
+}
+
+void ACrowdFlowAgent::AttemptDirectMoveToExit()
+{
+	if (IsExitVisible())
 	{
-		return;
-	}
+		NextMove = FMove();
 
-	if (Units == 0)
-	{
-		return;
-	}
+		NextMove.Direction = ExitLocation - GetActorLocation();
+		NextMove.Direction.Normalize();
+		NextMove.Units = FVector::Distance(ExitLocation, GetActorLocation());
 
-	float Speed = 0.001;
-	CurrentUnitsLeft = Units;
-	FTimerDelegate Delegate;
-	Delegate.BindUFunction(this, "UpdateMovement", Direction, Units);
-	GetWorld()->GetTimerManager().SetTimer(TH_Movement, Delegate, Speed, true);
+		GetWorld()->GetTimerManager().ClearTimer(TH_Movement);
+		ExecuteNextMove();
+	}
 }
 
-void ACrowdFlowAgent::MoveTowardsBestMove()
+void ACrowdFlowAgent::BeginLookingForDirectMoveToExit()
 {
-	MoveTowardsDirection(BestMove.Direction, BestMove.Units);
+	GetWorld()->GetTimerManager().SetTimer(TH_DirectMove, this, &ACrowdFlowAgent::AttemptDirectMoveToExit, DirectMoveSearchRate, true);
 }
 
-void ACrowdFlowAgent::CalculatePossibleMoves()
+void ACrowdFlowAgent::CalculateNextMove()
 {
-	BestMove = FMove();
+	NextMove = FMove();
+	
 	FVector ForwardVector = GetActorForwardVector();
 	float DegreesBetweenMove = 360 / TurnSmoothness;
 	for (int32 i = 0; i < 360; i += DegreesBetweenMove)
@@ -75,19 +84,20 @@ void ACrowdFlowAgent::CalculatePossibleMoves()
 
 		if (IsBestMove(NewMove))
 		{
-			BestMove = NewMove;
+			NextMove = NewMove;
 		}
 
 		PossibleMoves.Add(NewMove);
 	}
 }
 
+
 bool ACrowdFlowAgent::IsBestMove(FMove NewMove) const
 {
 	
-	FVector CurrentLocation = SphereComponent->GetComponentLocation();
+	FVector CurrentLocation = GetActorLocation();
 
-	FVector BestMoveLocation = CurrentLocation + BestMove.Direction * (BestMove.Units + SphereRadius);
+	FVector BestMoveLocation = CurrentLocation + NextMove.Direction * (NextMove.Units + SphereRadius);
 	FVector NewMoveLocation = CurrentLocation + NewMove.Direction * (NewMove.Units + SphereRadius);
 
 	float BestMoveDistance = FVector::Distance(BestMoveLocation, ExitLocation);
@@ -103,7 +113,7 @@ bool ACrowdFlowAgent::IsBestMove(FMove NewMove) const
 		return false;
 	}
 
-	if (BestMove.Units == 0)
+	if (NextMove.Units == 0)
 	{
 		//DrawDebugLine(GetWorld(), CurrentLocation, NewMoveLocation, FColor::Purple, false, 5.0f, -1, 10.0f);
 		return true;
@@ -120,9 +130,28 @@ bool ACrowdFlowAgent::IsBestMove(FMove NewMove) const
 	return true;
 }
 
-void ACrowdFlowAgent::SelectBestMove()
+void ACrowdFlowAgent::ExecuteNextMove()
 {
+	MoveTowardsDirection(NextMove.Direction, NextMove.Units);
+}
 
+void ACrowdFlowAgent::MoveTowardsDirection(FVector Direction, int32 Units)
+{
+	if (GetDistanceToExit() < ExitReachedRange)
+	{
+		return;
+	}
+
+	if (Units == 0)
+	{
+		return;
+	}
+
+	float Speed = 0.001;
+	CurrentUnitsLeft = Units;
+	FTimerDelegate Delegate;
+	Delegate.BindUFunction(this, "UpdateMovement", Direction, Units);
+	GetWorld()->GetTimerManager().SetTimer(TH_Movement, Delegate, Speed, true);
 }
 
 void ACrowdFlowAgent::MoveToLocation(const FVector Destination)
@@ -168,8 +197,8 @@ void ACrowdFlowAgent::UpdateMovement(FVector Direction, int32 Units)
 	else
 	{
 		GetWorld()->GetTimerManager().ClearTimer(TH_Movement);
-		CalculatePossibleMoves();
-		MoveTowardsBestMove();
+		CalculateNextMove();
+		ExecuteNextMove();
 	}
 }
 
