@@ -41,7 +41,11 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly)
 	float DirectMoveSearchRate=  0.5f;
-	
+
+	UPROPERTY(EditDefaultsOnly)
+	float Speed = 0.005;
+
+	UPROPERTY(EditDefaultsOnly)
 	float TurnSmoothness = 8.0f;
 
 	float SphereRadius;
@@ -63,6 +67,8 @@ protected:
 
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 	void MoveTowardsDirection(FVector Direction, int32 Units);
+
+	void MoveToLocation(const FVector Destination);
 	
 	bool IsExitVisible() const;
 	
@@ -96,7 +102,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 	int32 GetDistanceToExit();
 
-	void MoveToLocation(const FVector Destination);
 
 	void MoveToExitSign(ACrowdFlowExitSign* ExitSign);
 };

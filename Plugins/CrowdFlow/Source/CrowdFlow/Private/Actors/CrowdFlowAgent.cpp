@@ -147,7 +147,6 @@ void ACrowdFlowAgent::MoveTowardsDirection(FVector Direction, int32 Units)
 		return;
 	}
 
-	float Speed = 0.001;
 	CurrentUnitsLeft = Units;
 	FTimerDelegate Delegate;
 	Delegate.BindUFunction(this, "UpdateMovement", Direction, Units);
@@ -160,7 +159,6 @@ void ACrowdFlowAgent::MoveToLocation(const FVector Destination)
 	int32 Units = (int32) FVector::Distance(CurrentLocation, Destination);
 	FVector Direction = (Destination - CurrentLocation);
 	Direction.Normalize();
-	float Speed = 0.001;
 	CurrentUnitsLeft = Units;
 	FTimerDelegate Delegate;
 	Delegate.BindUFunction(this, "UpdateMovement", Direction, Units);
@@ -180,7 +178,18 @@ void ACrowdFlowAgent::MoveToExitSign(ACrowdFlowExitSign* ExitSign)
 
 	if (VisibleExitSign)
 	{
-		MoveToLocation(VisibleExitSign->GetExitSignDestination());
+		FVector ExitDestination = VisibleExitSign->GetExitSignDestination();
+		ExitDestination.Z = GetActorLocation().Z;
+		MoveToLocation(ExitDestination);
+
+		FVector CurrentLocation = GetActorLocation();
+		int32 Units = (int32)FVector::Distance(CurrentLocation, ExitDestination);
+		FVector Direction = (ExitDestination - CurrentLocation);
+		Direction.Normalize();
+		CurrentUnitsLeft = Units - 5;
+		FTimerDelegate Delegate;
+		Delegate.BindUFunction(this, "UpdateMovement", Direction, Units);
+		GetWorld()->GetTimerManager().SetTimer(TH_Movement, Delegate, Speed, true);
 	}
 
 }
@@ -196,6 +205,7 @@ void ACrowdFlowAgent::UpdateMovement(FVector Direction, int32 Units)
 	}
 	else
 	{
+		//VisibleExitSign = nullptr;
 		GetWorld()->GetTimerManager().ClearTimer(TH_Movement);
 		CalculateNextMove();
 		ExecuteNextMove();
