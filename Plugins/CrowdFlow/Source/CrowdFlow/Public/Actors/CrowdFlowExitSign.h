@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "CrowdFlowExitSign.generated.h"
 
+
 UCLASS()
 class CROWDFLOW_API ACrowdFlowExitSign : public AActor
 {
@@ -19,10 +20,29 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	class UArrowComponent* ForwardArrow;
+	virtual void PostLoad() override;
+	virtual void PostLoadSubobjects(FObjectInstancingGraph* OuterInstanceGraph) override;
+	virtual void PostInitProperties() override;
+	
+	virtual void PostEditMove(bool bFinished);
 
-	UPROPERTY(EditAnywhere)
+	virtual void PostRegisterAllComponents() override;
+
+	virtual bool ShouldTickIfViewportsOnly() const override;
+
+	UPROPERTY(EditInstanceOnly)
+	class UBillboardComponent* SpriteComponent;
+
+	bool DetectionActive = false;
+
+	UPROPERTY(EditInstanceOnly)
+	bool DrawDetectionDebug = false;
+
+	UPROPERTY(EditInstanceOnly)
 	FVector BoundingBox;
+
+	UPROPERTY(EditInstanceOnly)
+	FVector Offset;
 
 	FVector ExitSignAgentDestination;
 
