@@ -23,6 +23,15 @@ struct FMove
 	}
 };
 
+UENUM()
+enum class EMovementModes : uint8
+{
+	MM_Direct UMETA(DisplayName = "Direct"),
+	MM_Exit UMETA(DisplayName = "Exit"),
+};	
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FMovementFinished);
+
 UCLASS()
 class ACrowdFlowAgent : public AActor
 {
@@ -48,15 +57,25 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	float TurnSmoothness = 8.0f;
 
+	UPROPERTY(EditDefaultsOnly)
+	float UnitsToMovePastExit = 50.0f;
+
 	float SphereRadius;
 
 	bool LookingForExit = false;
+
+	UPROPERTY()	
+	FMovementFinished MovementFinishedDelegate;
+
+	EMovementModes MovementMode = EMovementModes::MM_Direct;
 	
 	FMove NextMove;
 	
 	TArray<FMove> PossibleMoves;
 	
 	ACrowdFlowExitSign* VisibleExitSign = nullptr;
+
+	ACrowdFlowExitSign* LastVisibleExitSign = nullptr;
 	
 	FTimerHandle TH_Movement;
 	
@@ -85,6 +104,12 @@ protected:
 	UFUNCTION()
 	void UpdateMovement(FVector Direction, int32 Units);
 
+	UFUNCTION()
+	void UpdateExitMovement(FVector Direction, int32 Units);
+
+	UFUNCTION()
+	void OnReachedExit();
+
 public:	
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 	int32 GetCurrentUnitsLeft();
@@ -103,5 +128,5 @@ public:
 	int32 GetDistanceToExit();
 
 
-	void MoveToExitSign(ACrowdFlowExitSign* ExitSign);
+	void MoveToExit(ACrowdFlowExitSign* ExitSign);
 };

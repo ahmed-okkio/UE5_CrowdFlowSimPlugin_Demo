@@ -165,10 +165,10 @@ void ACrowdFlowAgent::MoveToLocation(const FVector Destination)
 	GetWorld()->GetTimerManager().SetTimer(TH_Movement, Delegate, Speed, true);
 }
 
-void ACrowdFlowAgent::MoveToExitSign(ACrowdFlowExitSign* ExitSign)
+void ACrowdFlowAgent::MoveToExit(ACrowdFlowExitSign* ExitSign)
 {
 	// Don't move to this sign if we have already moved to it before.
-	if (ExitSign == VisibleExitSign)
+	if (ExitSign == VisibleExitSign || ExitSign == LastVisibleExitSign)
 	{
 		return;
 	}
@@ -178,7 +178,7 @@ void ACrowdFlowAgent::MoveToExitSign(ACrowdFlowExitSign* ExitSign)
 
 	if (VisibleExitSign)
 	{
-		FVector ExitDestination = VisibleExitSign->GetExitSignDestination();
+		FVector ExitDestination = VisibleExitSign->GetActorLocation();
 		ExitDestination.Z = GetActorLocation().Z;
 		MoveToLocation(ExitDestination);
 
@@ -186,10 +186,11 @@ void ACrowdFlowAgent::MoveToExitSign(ACrowdFlowExitSign* ExitSign)
 		int32 Units = (int32)FVector::Distance(CurrentLocation, ExitDestination);
 		FVector Direction = (ExitDestination - CurrentLocation);
 		Direction.Normalize();
-		CurrentUnitsLeft = Units - 5;
+		CurrentUnitsLeft = Units;
 		FTimerDelegate Delegate;
 		Delegate.BindUFunction(this, "UpdateMovement", Direction, Units);
 		GetWorld()->GetTimerManager().SetTimer(TH_Movement, Delegate, Speed, true);
+		MovementFinishedDelegate.AddDynamic(this, &ACrowdFlowAgent::OnReachedExit);
 	}
 
 }
@@ -205,10 +206,66 @@ void ACrowdFlowAgent::UpdateMovement(FVector Direction, int32 Units)
 	}
 	else
 	{
-		//VisibleExitSign = nullptr;
 		GetWorld()->GetTimerManager().ClearTimer(TH_Movement);
-		CalculateNextMove();
-		ExecuteNextMove();
+
+		if (VisibleExitSign)
+		{
+			MovementFinishedDelegate.Broadcast();
+		}
+		else
+		{
+			CalculateNextMove();
+			ExecuteNextMove();
+		}
+
+	}
+}
+
+void ACrowdFlowAgent::OnReachedExit()
+{
+	MovementFinishedDelegate.RemoveDynamic(this, &ACrowdFlowAgent::OnReachedExit);
+	
+	//LastVisibleExitSign = VisibleExitSign;
+
+	CurrentUnitsLeft = UnitsToMovePastExit;
+	//FVector Destination = GetActorLocation() + (-VisibleExitSign->GetActorForwardVector() * UnitsToMovePastExit);
+
+	FVector Direction = -VisibleExitSign->GetActorForwardVector();
+
+	FTimerDelegate Delegate;
+	Delegate.BindUFunction(this, "UpdateMovement", Direction, UnitsToMovePastExit);
+	GetWorld()->GetTimerManager().SetTimer(TH_Movement, Delegate, Speed, true);
+
+	LastVisibleExitSign = VisibleExitSign;
+	VisibleExitSign = nullptr;
+}
+
+void ACrowdFlowAgent::UpdateExitMovement(FVector Direction, int32 Units)
+{
+
+	if (CurrentUnitsLeft > 0)
+	{
+		SphereComponent->SetWorldLocation(SphereComponent->GetComponentLocation() + Direction * 1);
+		CurrentUnitsLeft--;
+
+	}
+	else
+	{
+		GetWorld()->GetTimerManager().ClearTimer(TH_Movement);
+		LastVisibleExitSign = VisibleExitSign;
+		VisibleExitSign = nullptr;
+
+		// Move through exit
+		CurrentUnitsLeft = UnitsToMovePastExit;
+		FVector ExitDestination = LastVisibleExitSign->GetActorLocation() + (-LastVisibleExitSign->GetActorForwardVector() * UnitsToMovePastExit);
+		ExitDestination.Z = GetActorLocation().Z;
+
+		FVector Direction = (ExitDestination - GetActorLocation());
+
+		FTimerDelegate Delegate;
+		Delegate.BindUFunction(this, "UpdateMovement", Direction, UnitsToMovePastExit);
+		GetWorld()->GetTimerManager().SetTimer(TH_Movement, Delegate, Speed, true);
+
 	}
 }
 

@@ -116,7 +116,7 @@ void ACrowdFlowExitSign::TraceForAgents()
 				return;
 			}
 	
-			Agent->MoveToExitSign(this);
+			Agent->MoveToExit(this);
 		}
 }
 
