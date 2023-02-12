@@ -277,6 +277,10 @@ void ACrowdFlowAgent::Tick(float DeltaTime)
 
 }
 
+`void ACrowdFlowAgent::MoveDownStair()
+{
+}
+
 int32 ACrowdFlowAgent::GetCurrentUnitsLeft()
 {
 	return CurrentUnitsLeft;

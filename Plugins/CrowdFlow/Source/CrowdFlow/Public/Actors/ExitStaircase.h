@@ -21,11 +21,16 @@ protected:
 
 	virtual bool ShouldTickIfViewportsOnly() const override;
 
+	void TraceForAgents();
+
 	UPROPERTY(EditInstanceOnly)
 	FVector BoundingBox;
 
 	UPROPERTY(EditInstanceOnly)
 	bool DrawDetectionDebug = false;
+
+	UPROPERTY(EditDefaultsOnly)
+	float TraceRate = 0.2f;
 
 public:	
 	// Called every frame

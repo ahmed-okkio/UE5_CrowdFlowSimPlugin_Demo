@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
+#include "Kismet/KismetSystemLibrary.h"
+#include "Actors/CrowdFlowAgent.h"	
 #include "Actors/ExitStaircase.h"
 
 // Sets default values
@@ -38,9 +39,49 @@ void AExitStaircase::Tick(float DeltaTime)
 	if (!HasActorBegunPlay() && DrawDetectionDebug)
 	{
 		FVector Center = GetActorLocation();
+
 		//Center.Z += BoundingBox.Z;
+
 		DrawDebugBox(GetWorld(), Center, BoundingBox, GetActorRotation().Quaternion(), FColor::Green, false);
 	}
 
+}
+
+void AExitStaircase::TraceForAgents()
+{
+	FVector Center = (GetActorLocation() ) + (GetActorForwardVector().GetSafeNormal() * BoundingBox.X);
+	FRotator Rotation = GetActorRotation();
+	FHitResult HitResult;
+	TArray<TEnumAsByte<EObjectTypeQuery>> HitObjectTypes;
+	TArray<AActor*, FDefaultAllocator> ignoredActors;
+
+	HitObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_PhysicsBody));
+	bool bHit = UKismetSystemLibrary::BoxTraceSingleForObjects(
+		GetWorld(),
+		Center,
+		Center,
+		BoundingBox,
+		Rotation,
+		HitObjectTypes,
+		false,
+		ignoredActors,
+		EDrawDebugTrace::ForDuration,
+		HitResult,
+		true,
+		FLinearColor::Blue,
+		FLinearColor::Green,
+		TraceRate
+	);
+
+	if (bHit)
+	{
+		ACrowdFlowAgent* Agent = (ACrowdFlowAgent*)HitResult.GetActor();
+		if (!Agent)
+		{
+			return;
+		}
+
+		Agent->MoveToExit(this);
+	}
 }
 

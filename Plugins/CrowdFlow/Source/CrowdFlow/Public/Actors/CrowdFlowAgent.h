@@ -129,4 +129,6 @@ public:
 
 
 	void MoveToExit(ACrowdFlowExitSign* ExitSign);
+
+	void MoveDownStair();
 };
