@@ -7,6 +7,8 @@
 #include "CrowdFlowAgent.generated.h"
 
 class ACrowdFlowExitSign;
+class ACrowdFlowExitStaircase;
+
 
 USTRUCT()
 struct FMove
@@ -31,6 +33,8 @@ enum class EMovementModes : uint8
 };	
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FMovementFinished);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FMovementBlocked);
+
 
 UCLASS()
 class ACrowdFlowAgent : public AActor
@@ -62,10 +66,14 @@ protected:
 
 	float SphereRadius;
 
+	float PersonalSpace = 50.0f;
+
 	bool LookingForExit = false;
 
 	UPROPERTY()	
 	FMovementFinished MovementFinishedDelegate;
+	UPROPERTY()
+	FMovementBlocked MovementBlockedDelegate;
 
 	EMovementModes MovementMode = EMovementModes::MM_Direct;
 	
@@ -76,6 +84,8 @@ protected:
 	ACrowdFlowExitSign* VisibleExitSign = nullptr;
 
 	ACrowdFlowExitSign* LastVisibleExitSign = nullptr;
+
+	ACrowdFlowExitStaircase* CurrentStaircase = nullptr;
 	
 	FTimerHandle TH_Movement;
 	
@@ -102,13 +112,16 @@ protected:
 	void ExecuteNextMove();
 
 	UFUNCTION()
-	void UpdateMovement(FVector Direction, int32 Units);
+	void MoveTillUnitAmount(FVector Direction);
 
 	UFUNCTION()
-	void UpdateExitMovement(FVector Direction, int32 Units);
+	void MoveTillBlocked(FVector Direction);
 
 	UFUNCTION()
 	void OnReachedExit();
+
+	UFUNCTION()
+	void OnFoundRightMostWall();
 
 public:	
 	UFUNCTION(BlueprintCallable, Category = "Movement")
@@ -130,5 +143,12 @@ public:
 
 	void MoveToExit(ACrowdFlowExitSign* ExitSign);
 
-	void MoveDownStair();
+	void MoveDownStair(ACrowdFlowExitStaircase* Staircase, bool RightStaircase);
+
+	void MoveDownRightStair();
+	
+	void FindRightMostWall();
+
+	void MoveDownLeftStair();
+
 };

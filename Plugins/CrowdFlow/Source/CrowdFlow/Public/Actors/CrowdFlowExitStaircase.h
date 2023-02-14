@@ -4,16 +4,16 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "ExitStaircase.generated.h"
+#include "CrowdFlowExitStaircase.generated.h"
 
 UCLASS()
-class CROWDFLOW_API AExitStaircase : public AActor
+class CROWDFLOW_API ACrowdFlowExitStaircase : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
-	AExitStaircase();
+	ACrowdFlowExitStaircase();
 
 protected:
 	// Called when the game starts or when spawned
@@ -21,16 +21,34 @@ protected:
 
 	virtual bool ShouldTickIfViewportsOnly() const override;
 
+	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& e) override;
+
+	void BeginTraceForAgents();
+
 	void TraceForAgents();
 
-	UPROPERTY(EditInstanceOnly)
-	FVector BoundingBox;
+	FTimerHandle TH_AgentTrace;
+
+
+	uint8 DepthPriority = 0;
 
 	UPROPERTY(EditInstanceOnly)
-	bool DrawDetectionDebug = false;
+	FVector BoundingBox = FVector(100,100,100);
+
+	UPROPERTY(EditInstanceOnly)
+	bool RightSideGoesDown = false;
+
+	UPROPERTY(EditInstanceOnly)
+	bool DrawDetectionDebug = true;
+	
+	UPROPERTY(EditInstanceOnly)
+	bool SeeBoundingBoxThroughWalls = false;
 
 	UPROPERTY(EditDefaultsOnly)
 	float TraceRate = 0.2f;
+
+	UPROPERTY(EditDefaultsOnly)
+	class UBillboardComponent* SpriteComponent;
 
 public:	
 	// Called every frame

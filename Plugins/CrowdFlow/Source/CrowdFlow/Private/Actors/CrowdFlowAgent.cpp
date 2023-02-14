@@ -6,6 +6,7 @@
 #include "UObject/ConstructorHelpers.h"
 #include "Actors/CrowdFlowExitSign.h"
 #include "Actors/CrowdFlowExit.h"
+#include "Actors/CrowdFlowExitStaircase.h"
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values
@@ -149,7 +150,7 @@ void ACrowdFlowAgent::MoveTowardsDirection(FVector Direction, int32 Units)
 
 	CurrentUnitsLeft = Units;
 	FTimerDelegate Delegate;
-	Delegate.BindUFunction(this, "UpdateMovement", Direction, Units);
+	Delegate.BindUFunction(this, "MoveTillUnitAmount", Direction, Units);
 	GetWorld()->GetTimerManager().SetTimer(TH_Movement, Delegate, Speed, true);
 }
 
@@ -161,7 +162,7 @@ void ACrowdFlowAgent::MoveToLocation(const FVector Destination)
 	Direction.Normalize();
 	CurrentUnitsLeft = Units;
 	FTimerDelegate Delegate;
-	Delegate.BindUFunction(this, "UpdateMovement", Direction, Units);
+	Delegate.BindUFunction(this, "MoveTillUnitAmount", Direction, Units);
 	GetWorld()->GetTimerManager().SetTimer(TH_Movement, Delegate, Speed, true);
 }
 
@@ -188,19 +189,21 @@ void ACrowdFlowAgent::MoveToExit(ACrowdFlowExitSign* ExitSign)
 		Direction.Normalize();
 		CurrentUnitsLeft = Units;
 		FTimerDelegate Delegate;
-		Delegate.BindUFunction(this, "UpdateMovement", Direction, Units);
+		Delegate.BindUFunction(this, "MoveTillUnitAmount", Direction);
 		GetWorld()->GetTimerManager().SetTimer(TH_Movement, Delegate, Speed, true);
 		MovementFinishedDelegate.AddDynamic(this, &ACrowdFlowAgent::OnReachedExit);
 	}
 
 }
 
-void ACrowdFlowAgent::UpdateMovement(FVector Direction, int32 Units)
+void ACrowdFlowAgent::MoveTillUnitAmount(FVector Direction)
 {
 
 	if (CurrentUnitsLeft > 0)
 	{
-		SphereComponent->SetWorldLocation(SphereComponent->GetComponentLocation() + Direction * 1);
+		SetActorRotation(Direction.Rotation());
+
+		SetActorLocation(GetActorLocation() + Direction * 1);
 		CurrentUnitsLeft--;
 
 	}
@@ -221,6 +224,37 @@ void ACrowdFlowAgent::UpdateMovement(FVector Direction, int32 Units)
 	}
 }
 
+void ACrowdFlowAgent::MoveTillBlocked(FVector Direction)
+{
+	if (CurrentUnitsLeft > 0)
+	{
+		SetActorRotation(Direction.Rotation());
+
+		SetActorLocation(GetActorLocation() + Direction * 1);
+		CurrentUnitsLeft--;
+
+	}
+	else
+	{
+			
+	}
+	{
+		FVector NewMoveLocation = GetActorLocation() + Direction * (PersonalSpace + SphereRadius);
+
+		FHitResult Hit;
+		GetWorld()->LineTraceSingleByChannel(Hit, GetActorLocation(), NewMoveLocation, ECollisionChannel::ECC_PhysicsBody);
+		if (Hit.bBlockingHit)
+		{
+			GetWorld()->GetTimerManager().ClearTimer(TH_Movement);
+		}
+		else
+		{
+			CurrentUnitsLeft = PersonalSpace;
+		}
+
+	}
+}
+
 void ACrowdFlowAgent::OnReachedExit()
 {
 	MovementFinishedDelegate.RemoveDynamic(this, &ACrowdFlowAgent::OnReachedExit);
@@ -233,40 +267,11 @@ void ACrowdFlowAgent::OnReachedExit()
 	FVector Direction = -VisibleExitSign->GetActorForwardVector();
 
 	FTimerDelegate Delegate;
-	Delegate.BindUFunction(this, "UpdateMovement", Direction, UnitsToMovePastExit);
+	Delegate.BindUFunction(this, "MoveTillUnitAmount", Direction);
 	GetWorld()->GetTimerManager().SetTimer(TH_Movement, Delegate, Speed, true);
 
 	LastVisibleExitSign = VisibleExitSign;
 	VisibleExitSign = nullptr;
-}
-
-void ACrowdFlowAgent::UpdateExitMovement(FVector Direction, int32 Units)
-{
-
-	if (CurrentUnitsLeft > 0)
-	{
-		SphereComponent->SetWorldLocation(SphereComponent->GetComponentLocation() + Direction * 1);
-		CurrentUnitsLeft--;
-
-	}
-	else
-	{
-		GetWorld()->GetTimerManager().ClearTimer(TH_Movement);
-		LastVisibleExitSign = VisibleExitSign;
-		VisibleExitSign = nullptr;
-
-		// Move through exit
-		CurrentUnitsLeft = UnitsToMovePastExit;
-		FVector ExitDestination = LastVisibleExitSign->GetActorLocation() + (-LastVisibleExitSign->GetActorForwardVector() * UnitsToMovePastExit);
-		ExitDestination.Z = GetActorLocation().Z;
-
-		FVector Direction = (ExitDestination - GetActorLocation());
-
-		FTimerDelegate Delegate;
-		Delegate.BindUFunction(this, "UpdateMovement", Direction, UnitsToMovePastExit);
-		GetWorld()->GetTimerManager().SetTimer(TH_Movement, Delegate, Speed, true);
-
-	}
 }
 
 // Called every frame
@@ -277,7 +282,55 @@ void ACrowdFlowAgent::Tick(float DeltaTime)
 
 }
 
-`void ACrowdFlowAgent::MoveDownStair()
+void ACrowdFlowAgent::MoveDownStair(ACrowdFlowExitStaircase* Staircase, bool RightStaircase)
+{
+	if (!Staircase || CurrentStaircase == Staircase)
+	{
+		return;
+	}
+
+	CurrentStaircase = Staircase;
+	GetWorld()->GetTimerManager().ClearTimer(TH_Movement);
+
+	if (RightStaircase)
+	{
+		MoveDownRightStair();
+	}
+	else
+	{
+		MoveDownLeftStair();
+	}
+
+}
+
+void ACrowdFlowAgent::MoveDownRightStair()
+{
+	// Find rightmost wall
+	FindRightMostWall();
+	// Walk straight and keep hugging right wall
+
+
+
+}
+
+void ACrowdFlowAgent::FindRightMostWall()
+{
+	FVector DirectionToRight = GetActorForwardVector().RotateAngleAxis(90.f, FVector(0, 0, 1));
+
+	FTimerDelegate Delegate;
+	Delegate.BindUFunction(this, "MoveTillBlocked", DirectionToRight);
+	GetWorld()->GetTimerManager().SetTimer(TH_Movement, Delegate, Speed, true);
+	MovementBlockedDelegate.AddDynamic(this, &ACrowdFlowAgent::OnFoundRightMostWall);
+}
+
+void ACrowdFlowAgent::OnFoundRightMostWall()
+{
+	MovementBlockedDelegate.RemoveDynamic(this, &ACrowdFlowAgent::OnFoundRightMostWall);
+
+
+}
+
+void ACrowdFlowAgent::MoveDownLeftStair()
 {
 }
 
