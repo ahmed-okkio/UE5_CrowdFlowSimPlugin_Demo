@@ -111,7 +111,7 @@ void ACrowdFlowExitStaircase::TraceForAgents()
 
 	for (auto HitResult : HitResults)
 	{
-		ACrowdFlowAgent* Agent = (ACrowdFlowAgent*)HitResult.GetActor();
+		ACrowdFlowAgent* Agent = Cast<ACrowdFlowAgent>(HitResult.GetActor());
 
 		if (!Agent)
 		{

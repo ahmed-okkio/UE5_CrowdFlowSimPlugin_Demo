@@ -30,9 +30,6 @@ protected:
 
 	virtual bool ShouldTickIfViewportsOnly() const override;
 
-	UPROPERTY(EditDefaultsOnly)
-	class UBillboardComponent* SpriteComponent;
-
 	bool DetectionActive = false;
 
 	UPROPERTY(EditInstanceOnly)

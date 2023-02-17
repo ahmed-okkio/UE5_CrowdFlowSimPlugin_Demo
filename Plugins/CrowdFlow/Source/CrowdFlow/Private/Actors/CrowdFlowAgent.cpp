@@ -34,7 +34,8 @@ void ACrowdFlowAgent::BeginPlay()
 	
 	if (AllActors[0])
 	{
-		ExitLocation = AllActors[0]->GetActorLocation();
+		ExitLocation1 = AllActors[0]->GetActorLocation();
+		ExitLocation = FVector(-2500.000000, -496.286185, 1143.345423);
 	}
 	SphereRadius = SphereComponent->GetStaticMesh()->GetBounds().SphereRadius;
 	
@@ -43,25 +44,49 @@ void ACrowdFlowAgent::BeginPlay()
 	ExecuteNextMove();
 }
 
+bool ACrowdFlowAgent::IsGrounded()
+{
+	FHitResult Hit;
+	FVector CurrentLocation = GetActorLocation();
+	FVector EndLocation = CurrentLocation + FVector(0,0,-1) * (SphereRadius+5.f);
+	GetWorld()->LineTraceSingleByChannel(Hit, CurrentLocation, EndLocation, ECollisionChannel::ECC_PhysicsBody);
+	return Hit.bBlockingHit;
+}
+
 bool ACrowdFlowAgent::IsExitVisible() const
 {
 	FHitResult Hit;
-	GetWorld()->LineTraceSingleByChannel(Hit, GetActorLocation(), ExitLocation, ECollisionChannel::ECC_WorldStatic);
+	GetWorld()->LineTraceSingleByChannel(Hit, GetActorLocation(), ExitLocation1, ECollisionChannel::ECC_Visibility);
 	return !Hit.bBlockingHit;
+}
+
+bool ACrowdFlowAgent::IsExitOnSameFloor() const
+{
+	float CurrentHeight = GetActorLocation().Z;
+	float LowerBound = ExitLocation1.Z - SameFloorHeightMargin;
+	float UpperBound = ExitLocation1.Z + SameFloorHeightMargin;
+
+	return (CurrentHeight >= LowerBound && CurrentHeight <= UpperBound);
 }
 
 void ACrowdFlowAgent::AttemptDirectMoveToExit()
 {
-	if (IsExitVisible())
+	if (IsExitVisible() && IsExitOnSameFloor())
 	{
+		FoundDirectMoveToExit = true;
+
 		NextMove = FMove();
 
-		NextMove.Direction = ExitLocation - GetActorLocation();
+		NextMove.Direction = ExitLocation1 - GetActorLocation();
 		NextMove.Direction.Normalize();
-		NextMove.Units = FVector::Distance(ExitLocation, GetActorLocation());
+		NextMove.Units = FVector::Distance(ExitLocation1, GetActorLocation());
 
-		GetWorld()->GetTimerManager().ClearTimer(TH_Movement);
+		ClearMoveQueue();
 		ExecuteNextMove();
+	}
+	else
+	{
+		FoundDirectMoveToExit = false;
 	}
 }
 
@@ -136,11 +161,18 @@ void ACrowdFlowAgent::ExecuteNextMove()
 	MoveTowardsDirection(NextMove.Direction, NextMove.Units);
 }
 
+void ACrowdFlowAgent::ClearMoveQueue()
+{
+	MovementBlockedDelegate.RemoveAll(this);
+	MovementFinishedDelegate.RemoveAll(this);
+	GetWorld()->GetTimerManager().ClearTimer(TH_Movement);
+}
+
 void ACrowdFlowAgent::MoveTowardsDirection(FVector Direction, int32 Units)
 {
 	if (GetDistanceToExit() < ExitReachedRange)
 	{
-		return;
+		return GetWorld()->GetTimerManager().ClearTimer(TH_Movement);
 	}
 
 	if (Units == 0)
@@ -198,14 +230,14 @@ void ACrowdFlowAgent::MoveToExit(ACrowdFlowExitSign* ExitSign)
 
 void ACrowdFlowAgent::MoveTillUnitAmount(FVector Direction)
 {
-
 	if (CurrentUnitsLeft > 0)
 	{
 		SetActorRotation(Direction.Rotation());
-
-		SetActorLocation(GetActorLocation() + Direction * 1);
+		SetActorLocation(GetActorLocation() + (Direction * 1));
+		FVector T = FVector(0, 0, 0);
+		T.Z = GetVelocity().Z;
+		SphereComponent->SetAllPhysicsLinearVelocity(T, false);
 		CurrentUnitsLeft--;
-
 	}
 	else
 	{
@@ -229,15 +261,14 @@ void ACrowdFlowAgent::MoveTillBlocked(FVector Direction)
 	if (CurrentUnitsLeft > 0)
 	{
 		SetActorRotation(Direction.Rotation());
-
 		SetActorLocation(GetActorLocation() + Direction * 1);
+		FVector T = FVector(0,0,0);
+		T.Z = GetVelocity().Z;
+		SphereComponent->SetAllPhysicsLinearVelocity(T, false);
 		CurrentUnitsLeft--;
 
 	}
 	else
-	{
-			
-	}
 	{
 		FVector NewMoveLocation = GetActorLocation() + Direction * (PersonalSpace + SphereRadius);
 
@@ -246,6 +277,7 @@ void ACrowdFlowAgent::MoveTillBlocked(FVector Direction)
 		if (Hit.bBlockingHit)
 		{
 			GetWorld()->GetTimerManager().ClearTimer(TH_Movement);
+			MovementBlockedDelegate.Broadcast();
 		}
 		else
 		{
@@ -279,6 +311,11 @@ void ACrowdFlowAgent::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	//MoveTowardsDirection(SphereComponent->GetForwardVector(), 5);
+	if (FoundDirectMoveToExit)
+	{
+		DrawDebugLine(GetWorld(), GetActorLocation(), ExitLocation1, FColor::Red, false);
+	}
+
 
 }
 
@@ -305,33 +342,62 @@ void ACrowdFlowAgent::MoveDownStair(ACrowdFlowExitStaircase* Staircase, bool Rig
 
 void ACrowdFlowAgent::MoveDownRightStair()
 {
-	// Find rightmost wall
 	FindRightMostWall();
-	// Walk straight and keep hugging right wall
-
-
-
 }
 
 void ACrowdFlowAgent::FindRightMostWall()
 {
 	FVector DirectionToRight = GetActorForwardVector().RotateAngleAxis(90.f, FVector(0, 0, 1));
-
 	FTimerDelegate Delegate;
 	Delegate.BindUFunction(this, "MoveTillBlocked", DirectionToRight);
 	GetWorld()->GetTimerManager().SetTimer(TH_Movement, Delegate, Speed, true);
+
+	// Bind function to trigger when right most wall is found
 	MovementBlockedDelegate.AddDynamic(this, &ACrowdFlowAgent::OnFoundRightMostWall);
 }
 
-void ACrowdFlowAgent::OnFoundRightMostWall()
+void ACrowdFlowAgent::FollowRightMostWall()
 {
-	MovementBlockedDelegate.RemoveDynamic(this, &ACrowdFlowAgent::OnFoundRightMostWall);
-
-
+	// Move along right wall
+	FVector DirectionToStair = GetActorForwardVector().RotateAngleAxis(-90.f, FVector(0, 0, 1));
+	FTimerDelegate Delegate;
+	Delegate.BindUFunction(this, "MoveTillBlocked", DirectionToStair);
+	GetWorld()->GetTimerManager().SetTimer(TH_Movement, Delegate, Speed, true);
 }
 
 void ACrowdFlowAgent::MoveDownLeftStair()
 {
+	FindLeftMostWall();
+}
+
+void ACrowdFlowAgent::FindLeftMostWall()
+{
+	FVector DirectionToLeft = GetActorForwardVector().RotateAngleAxis(-90.f, FVector(0, 0, 1));
+	FTimerDelegate Delegate;
+	Delegate.BindUFunction(this, "MoveTillBlocked", DirectionToLeft);
+	GetWorld()->GetTimerManager().SetTimer(TH_Movement, Delegate, Speed, true);
+
+	// Bind function to trigger when left most wall is found
+	MovementBlockedDelegate.AddDynamic(this, &ACrowdFlowAgent::OnFoundLeftMostWall);
+}
+
+void ACrowdFlowAgent::FollowLeftMostWall()
+{
+	// Move along left wall
+	FVector DirectionToStair = GetActorForwardVector().RotateAngleAxis(90.f, FVector(0, 0, 1));
+	FTimerDelegate Delegate;
+	Delegate.BindUFunction(this, "MoveTillBlocked", DirectionToStair);
+	GetWorld()->GetTimerManager().SetTimer(TH_Movement, Delegate, Speed, true);
+}
+
+void ACrowdFlowAgent::OnFoundRightMostWall()
+{
+	FollowRightMostWall();
+}
+
+void ACrowdFlowAgent::OnFoundLeftMostWall()
+{
+	FollowLeftMostWall();
 }
 
 int32 ACrowdFlowAgent::GetCurrentUnitsLeft()

@@ -46,6 +46,13 @@ public:
 	ACrowdFlowAgent();
 
 protected:
+
+	UPROPERTY(EditDefaultsOnly)
+	float SameFloorHeightMargin = 50.f;
+
+	UPROPERTY(EditDefaultsOnly)
+	float MaxStepHeight = 25.f;
+
 	UPROPERTY(EditInstanceOnly)
 	float UnitsPerMove = 100.0f;
 	
@@ -69,6 +76,8 @@ protected:
 	float PersonalSpace = 50.0f;
 
 	bool LookingForExit = false;
+
+	bool FoundDirectMoveToExit = false;
 
 	UPROPERTY()	
 	FMovementFinished MovementFinishedDelegate;
@@ -94,12 +103,16 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	bool IsGrounded();
+
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 	void MoveTowardsDirection(FVector Direction, int32 Units);
 
 	void MoveToLocation(const FVector Destination);
 	
 	bool IsExitVisible() const;
+
+	bool IsExitOnSameFloor() const;
 	
 	void AttemptDirectMoveToExit();
 
@@ -110,6 +123,20 @@ protected:
 	bool IsBestMove(FMove NewMove) const;
 	
 	void ExecuteNextMove();
+
+	void ClearMoveQueue();
+
+	void MoveDownRightStair();
+
+	void FindRightMostWall();
+
+	void FollowRightMostWall();
+
+	void MoveDownLeftStair();
+
+	void FindLeftMostWall();
+
+	void FollowLeftMostWall();
 
 	UFUNCTION()
 	void MoveTillUnitAmount(FVector Direction);
@@ -123,6 +150,10 @@ protected:
 	UFUNCTION()
 	void OnFoundRightMostWall();
 
+
+	UFUNCTION()
+	void OnFoundLeftMostWall();
+
 public:	
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 	int32 GetCurrentUnitsLeft();
@@ -134,6 +165,9 @@ public:
 	class UStaticMeshComponent* SphereComponent;
 
 	FVector ExitLocation;
+
+	FVector ExitLocation1;
+
 	
 	int32 CurrentUnitsLeft = 0;
 
@@ -144,11 +178,4 @@ public:
 	void MoveToExit(ACrowdFlowExitSign* ExitSign);
 
 	void MoveDownStair(ACrowdFlowExitStaircase* Staircase, bool RightStaircase);
-
-	void MoveDownRightStair();
-	
-	void FindRightMostWall();
-
-	void MoveDownLeftStair();
-
 };

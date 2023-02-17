@@ -20,10 +20,6 @@ ACrowdFlowExitSign::ACrowdFlowExitSign()
 	BoundingBox = FVector(100, 100, 100);
 
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
-	SpriteComponent = CreateDefaultSubobject<UBillboardComponent>(TEXT("Billboard Icon"));
-	SpriteComponent->SetupAttachment(RootComponent);
-	//SpriteComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-
 }
 
 // Called when the game starts or when spawned
@@ -86,12 +82,12 @@ void ACrowdFlowExitSign::TraceForAgents()
 {		
 		FVector Center = (GetActorLocation() + Offset) + (GetActorForwardVector().GetSafeNormal() * BoundingBox.X);
 		FRotator Rotation = GetActorRotation();
-		FHitResult HitResult;
+		TArray<FHitResult> HitResults;
 		TArray<TEnumAsByte<EObjectTypeQuery>> HitObjectTypes;
 		TArray<AActor*, FDefaultAllocator> ignoredActors;
 
 		HitObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_PhysicsBody));
-		bool bHit = UKismetSystemLibrary::BoxTraceSingleForObjects(
+		bool bHit = UKismetSystemLibrary::BoxTraceMultiForObjects(
 			GetWorld(),
 			Center,
 			Center,
@@ -101,21 +97,26 @@ void ACrowdFlowExitSign::TraceForAgents()
 			false,
 			ignoredActors,
 			EDrawDebugTrace::ForDuration,
-			HitResult,
+			HitResults,
 			true,
 			FLinearColor::Blue,
 			FLinearColor::Green,
 			TraceRate
 		);
 
-		if (bHit)
+		if (!bHit)
 		{
-			ACrowdFlowAgent* Agent = (ACrowdFlowAgent*) HitResult.GetActor();
+			return;
+		}
+
+		for (auto HitResult : HitResults)
+		{
+			ACrowdFlowAgent* Agent = Cast<ACrowdFlowAgent>(HitResult.GetActor());
 			if (!Agent)
 			{
 				return;
 			}
-	
+
 			Agent->MoveToExit(this);
 		}
 }
