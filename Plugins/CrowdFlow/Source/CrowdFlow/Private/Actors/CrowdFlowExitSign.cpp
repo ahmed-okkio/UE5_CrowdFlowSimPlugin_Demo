@@ -86,26 +86,13 @@ void ACrowdFlowExitSign::TraceForAgents()
 		TArray<TEnumAsByte<EObjectTypeQuery>> HitObjectTypes;
 		TArray<AActor*, FDefaultAllocator> ignoredActors;
 
-		HitObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_GameTraceChannel2));
-		bool bHit = UKismetSystemLibrary::BoxTraceMultiForObjects(
-			GetWorld(),
-			Center,
-			Center,
-			BoundingBox,
-			Rotation,
-			HitObjectTypes,
-			false,
-			ignoredActors,
-			EDrawDebugTrace::ForDuration,
-			HitResults,
-			true,
-			FLinearColor::Blue,
-			FLinearColor::Green,
-			TraceRate
-		);
+		HitObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_GameTraceChannel1));
+		bool bHit = GetWorld()->SweepMultiByChannel(HitResults, Center, Center, Rotation.Quaternion(), ECollisionChannel::ECC_GameTraceChannel1, FCollisionShape::MakeBox(BoundingBox), FCollisionQueryParams());
+		//FVector Center = (GetActorLocation() + Offset) + GetActorForwardVector() * BoundingBox.X;
 
-			if (!bHit)
+		if (!bHit)
 		{
+			DrawDebugBox(GetWorld(), Center, BoundingBox, GetActorRotation().Quaternion(), FColor::Blue, false, TraceRate, 0, 5);
 			return;
 		}
 
@@ -116,6 +103,9 @@ void ACrowdFlowExitSign::TraceForAgents()
 			{
 				return;
 			}
+
+			//FVector Center = (GetActorLocation() + Offset) + GetActorForwardVector() * BoundingBox.X;
+			DrawDebugBox(GetWorld(), Center, BoundingBox, GetActorRotation().Quaternion(), FColor::Green, false, TraceRate, 0, 5);
 
 			Agent->MoveToExit(this);
 		}

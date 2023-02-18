@@ -56,7 +56,7 @@ bool ACrowdFlowAgent::IsGrounded()
 bool ACrowdFlowAgent::IsExitVisible() const
 {
 	FHitResult Hit;
-	GetWorld()->LineTraceSingleByChannel(Hit, GetActorLocation(), ExitLocation1, ECollisionChannel::ECC_Visibility);
+	GetWorld()->LineTraceSingleByChannel(Hit, GetActorLocation(), ExitLocation1, ECollisionChannel::ECC_GameTraceChannel2);
 	return !Hit.bBlockingHit;
 }
 
@@ -277,6 +277,11 @@ void ACrowdFlowAgent::MoveTillBlocked(FVector Direction)
 		GetWorld()->LineTraceSingleByChannel(Hit, GetActorLocation(), NewMoveLocation, ECollisionChannel::ECC_WorldStatic);
 		if (Hit.bBlockingHit)
 		{
+			if (ACrowdFlowAgent* HitActor = Cast<ACrowdFlowAgent>(Hit.GetActor()))
+			{
+				return;
+			}
+
 			DrawDebugLine(GetWorld(), GetActorLocation(), NewMoveLocation, FColor::Red,false,1);
 
 			GetWorld()->GetTimerManager().ClearTimer(TH_Movement);
