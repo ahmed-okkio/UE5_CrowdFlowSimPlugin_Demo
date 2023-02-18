@@ -86,7 +86,7 @@ void ACrowdFlowExitSign::TraceForAgents()
 		TArray<TEnumAsByte<EObjectTypeQuery>> HitObjectTypes;
 		TArray<AActor*, FDefaultAllocator> ignoredActors;
 
-		HitObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_PhysicsBody));
+		HitObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_GameTraceChannel2));
 		bool bHit = UKismetSystemLibrary::BoxTraceMultiForObjects(
 			GetWorld(),
 			Center,
@@ -104,7 +104,7 @@ void ACrowdFlowExitSign::TraceForAgents()
 			TraceRate
 		);
 
-		if (!bHit)
+			if (!bHit)
 		{
 			return;
 		}

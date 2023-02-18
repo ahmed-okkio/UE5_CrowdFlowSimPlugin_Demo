@@ -163,6 +163,7 @@ void ACrowdFlowAgent::ExecuteNextMove()
 
 void ACrowdFlowAgent::ClearMoveQueue()
 {
+	CurrentUnitsLeft = 0;
 	MovementBlockedDelegate.RemoveAll(this);
 	MovementFinishedDelegate.RemoveAll(this);
 	GetWorld()->GetTimerManager().ClearTimer(TH_Movement);
@@ -273,14 +274,18 @@ void ACrowdFlowAgent::MoveTillBlocked(FVector Direction)
 		FVector NewMoveLocation = GetActorLocation() + Direction * (PersonalSpace + SphereRadius);
 
 		FHitResult Hit;
-		GetWorld()->LineTraceSingleByChannel(Hit, GetActorLocation(), NewMoveLocation, ECollisionChannel::ECC_PhysicsBody);
+		GetWorld()->LineTraceSingleByChannel(Hit, GetActorLocation(), NewMoveLocation, ECollisionChannel::ECC_WorldStatic);
 		if (Hit.bBlockingHit)
 		{
+			DrawDebugLine(GetWorld(), GetActorLocation(), NewMoveLocation, FColor::Red,false,1);
+
 			GetWorld()->GetTimerManager().ClearTimer(TH_Movement);
 			MovementBlockedDelegate.Broadcast();
 		}
 		else
 		{
+			DrawDebugLine(GetWorld(), GetActorLocation(), NewMoveLocation, FColor::Blue,false,1);
+
 			CurrentUnitsLeft = PersonalSpace;
 		}
 
@@ -327,7 +332,7 @@ void ACrowdFlowAgent::MoveDownStair(ACrowdFlowExitStaircase* Staircase, bool Rig
 	}
 
 	CurrentStaircase = Staircase;
-	GetWorld()->GetTimerManager().ClearTimer(TH_Movement);
+	ClearMoveQueue();
 
 	if (RightStaircase)
 	{
