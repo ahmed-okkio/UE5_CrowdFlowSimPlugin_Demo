@@ -32,12 +32,20 @@ enum class EMovementModes : uint8
 	MM_Exit UMETA(DisplayName = "Exit"),
 };	
 
+UENUM(BlueprintType)
+enum class EAgentBehaviour : uint8
+{
+	FollowTheCrowd UMETA(DisplayName = "Follow The Crowd"),
+	AvoidTheCrowd UMETA(DisplayName = "Avoid The Crowd"),
+	AvoidUnknownExits UMETA(DisplayName = "Avoid Unkown Exits")
+};
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FMovementFinished);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FMovementBlocked);
 
 
 UCLASS()
-class ACrowdFlowAgent : public AActor
+class CROWDFLOW_API ACrowdFlowAgent : public AActor
 {
 	GENERATED_BODY()
 	
@@ -46,6 +54,9 @@ public:
 	ACrowdFlowAgent();
 
 protected:
+
+	UPROPERTY(EditDefaultsOnly)
+	EAgentBehaviour AgentBehaviour = EAgentBehaviour::FollowTheCrowd;
 
 	UPROPERTY(EditDefaultsOnly)
 	float SameFloorHeightMargin = 50.f;
