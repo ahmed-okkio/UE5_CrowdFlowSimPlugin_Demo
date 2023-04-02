@@ -98,8 +98,10 @@ protected:
 	EMovementModes MovementMode = EMovementModes::MM_Direct;
 	
 	FMove NextMove;
+
+	FMove* ActiveMove = nullptr;
 	
-	TArray<FMove> PossibleMoves;
+	TQueue<FMove*> MoveQueue;
 	
 	ACrowdFlowExitSign* VisibleExitSign = nullptr;
 
@@ -115,6 +117,8 @@ protected:
 	virtual void BeginPlay() override;
 
 	bool IsGrounded();
+
+	void LookForPathAround();
 
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 	void MoveTowardsDirection(FVector Direction, int32 Units);

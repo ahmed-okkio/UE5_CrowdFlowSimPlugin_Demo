@@ -53,6 +53,11 @@ bool ACrowdFlowAgent::IsGrounded()
 	return Hit.bBlockingHit;
 }
 
+void ACrowdFlowAgent::LookForPathAround()
+{
+
+}
+
 bool ACrowdFlowAgent::IsExitVisible() const
 {
 	FHitResult Hit;
@@ -112,8 +117,6 @@ void ACrowdFlowAgent::CalculateNextMove()
 		{
 			NextMove = NewMove;
 		}
-
-		PossibleMoves.Add(NewMove);
 	}
 }
 
@@ -163,6 +166,7 @@ void ACrowdFlowAgent::ExecuteNextMove()
 
 void ACrowdFlowAgent::ClearMoveQueue()
 {
+	MoveQueue.Empty();
 	CurrentUnitsLeft = 0;
 	MovementBlockedDelegate.RemoveAll(this);
 	MovementFinishedDelegate.RemoveAll(this);
@@ -311,7 +315,7 @@ void ACrowdFlowAgent::OnReachedExit()
 	FTimerDelegate Delegate;
 	Delegate.BindUFunction(this, "MoveTillUnitAmount", Direction);
 	GetWorld()->GetTimerManager().SetTimer(TH_Movement, Delegate, Speed, true);
-
+		
 	LastVisibleExitSign = VisibleExitSign;
 	VisibleExitSign = nullptr;
 }
@@ -325,7 +329,11 @@ void ACrowdFlowAgent::Tick(float DeltaTime)
 	{
 		DrawDebugLine(GetWorld(), GetActorLocation(), ExitLocation, FColor::Red, false);
 	}
-
+	
+	if (ActiveMove == nullptr) 
+	{
+		MoveQueue.Dequeue(ActiveMove OUT);
+	}
 
 }
 
