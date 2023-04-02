@@ -185,6 +185,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 	int32 GetDistanceToExit();
 
+	virtual void SeeExit(ACrowdFlowExitSign* ExitSign);
 
 	void MoveToExit(ACrowdFlowExitSign* ExitSign);
 

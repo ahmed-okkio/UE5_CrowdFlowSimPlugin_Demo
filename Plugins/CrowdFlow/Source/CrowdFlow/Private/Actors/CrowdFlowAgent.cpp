@@ -34,8 +34,8 @@ void ACrowdFlowAgent::BeginPlay()
 	
 	if (AllActors[0])
 	{
-		ExitLocation1 = AllActors[0]->GetActorLocation();
-		ExitLocation = FVector(-2500.000000, -496.286185, 1143.345423);
+		ExitLocation = AllActors[0]->GetActorLocation();
+		//ExitLocation = FVector(-2500.000000, -496.286185, 1143.345423);
 	}
 	SphereRadius = SphereComponent->GetStaticMesh()->GetBounds().SphereRadius;
 	
@@ -56,15 +56,15 @@ bool ACrowdFlowAgent::IsGrounded()
 bool ACrowdFlowAgent::IsExitVisible() const
 {
 	FHitResult Hit;
-	GetWorld()->LineTraceSingleByChannel(Hit, GetActorLocation(), ExitLocation1, ECollisionChannel::ECC_GameTraceChannel2);
+	GetWorld()->LineTraceSingleByChannel(Hit, GetActorLocation(), ExitLocation, ECollisionChannel::ECC_GameTraceChannel2);
 	return !Hit.bBlockingHit;
 }
 
 bool ACrowdFlowAgent::IsExitOnSameFloor() const
 {
 	float CurrentHeight = GetActorLocation().Z;
-	float LowerBound = ExitLocation1.Z - SameFloorHeightMargin;
-	float UpperBound = ExitLocation1.Z + SameFloorHeightMargin;
+	float LowerBound = ExitLocation.Z - SameFloorHeightMargin;
+	float UpperBound = ExitLocation.Z + SameFloorHeightMargin;
 
 	return (CurrentHeight >= LowerBound && CurrentHeight <= UpperBound);
 }
@@ -77,9 +77,9 @@ void ACrowdFlowAgent::AttemptDirectMoveToExit()
 
 		NextMove = FMove();
 
-		NextMove.Direction = ExitLocation1 - GetActorLocation();
+		NextMove.Direction = ExitLocation - GetActorLocation();
 		NextMove.Direction.Normalize();
-		NextMove.Units = FVector::Distance(ExitLocation1, GetActorLocation());
+		NextMove.Units = FVector::Distance(ExitLocation, GetActorLocation());
 
 		ClearMoveQueue();
 		ExecuteNextMove();
@@ -323,7 +323,7 @@ void ACrowdFlowAgent::Tick(float DeltaTime)
 	//MoveTowardsDirection(SphereComponent->GetForwardVector(), 5);
 	if (FoundDirectMoveToExit)
 	{
-		DrawDebugLine(GetWorld(), GetActorLocation(), ExitLocation1, FColor::Red, false);
+		DrawDebugLine(GetWorld(), GetActorLocation(), ExitLocation, FColor::Red, false);
 	}
 
 
@@ -403,6 +403,19 @@ void ACrowdFlowAgent::FollowLeftMostWall()
 void ACrowdFlowAgent::OnFoundRightMostWall()
 {
 	FollowRightMostWall();
+}
+
+void ACrowdFlowAgent::SeeExit(ACrowdFlowExitSign* ExitSign)
+{
+	if (!ExitSign)
+	{
+		return;
+	}
+
+	if (ExitSign->IsDefaultPath())
+	{
+		MoveToExit(ExitSign);
+	}
 }
 
 void ACrowdFlowAgent::OnFoundLeftMostWall()

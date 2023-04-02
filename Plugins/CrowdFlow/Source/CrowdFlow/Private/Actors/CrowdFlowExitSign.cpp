@@ -105,9 +105,9 @@ void ACrowdFlowExitSign::TraceForAgents()
 			}
 
 			//FVector Center = (GetActorLocation() + Offset) + GetActorForwardVector() * BoundingBox.X;
-			DrawDebugBox(GetWorld(), Center, BoundingBox, GetActorRotation().Quaternion(), FColor::Green, false, TraceRate, 0, 5);
+			DrawDebugBox(GetWorld(), Center, BoundingBox, GetActorRotation().Quaternion(), DefaultPath? FColor::Green : FColor::Orange, false, TraceRate, 0, 5);
 
-			Agent->MoveToExit(this);
+			Agent->SeeExit(this);
 		}
 }
 
@@ -123,12 +123,17 @@ void ACrowdFlowExitSign::Tick(float DeltaTime)
 	if (!HasActorBegunPlay() && DrawDetectionDebug)
 	{
 		FVector Center = (GetActorLocation() + Offset) + GetActorForwardVector() * BoundingBox.X;
-		DrawDebugBox(GetWorld(), Center, BoundingBox, GetActorRotation().Quaternion(), FColor::Green, false);
+		DrawDebugBox(GetWorld(), Center, BoundingBox, GetActorRotation().Quaternion(), DefaultPath ? FColor::Green : FColor::Orange, false);
 	}
 }
 
 FVector ACrowdFlowExitSign::GetExitSignDestination() const
 {
 	return ExitSignAgentDestination;
+}
+
+bool ACrowdFlowExitSign::IsDefaultPath() const
+{
+	return DefaultPath;
 }
 
