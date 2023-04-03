@@ -105,9 +105,9 @@ void ACrowdFlowExitSign::TraceForAgents()
 			}
 
 			//FVector Center = (GetActorLocation() + Offset) + GetActorForwardVector() * BoundingBox.X;
-			DrawDebugBox(GetWorld(), Center, BoundingBox, GetActorRotation().Quaternion(), DefaultPath ? FColor::Green : FColor::Orange, false, TraceRate, 0, 5);
+			DrawDebugBox(GetWorld(), Center, BoundingBox, GetActorRotation().Quaternion(), KnownExit ? FColor::Green : FColor::Orange, false, TraceRate, 0, 5);
 
-			Agent->MoveToExit(this);
+			Agent->SeeExit(this);
 		}
 }
 
@@ -123,7 +123,7 @@ void ACrowdFlowExitSign::Tick(float DeltaTime)
 	if (!HasActorBegunPlay() && DrawDetectionDebug)
 	{
 		FVector Center = (GetActorLocation() + Offset) + GetActorForwardVector() * BoundingBox.X;
-		DrawDebugBox(GetWorld(), Center, BoundingBox, GetActorRotation().Quaternion(), DefaultPath? FColor::Green : FColor::Orange, false);
+		DrawDebugBox(GetWorld(), Center, BoundingBox, GetActorRotation().Quaternion(), KnownExit? FColor::Green : FColor::Orange, false);
 	}
 }
 
@@ -132,8 +132,24 @@ FVector ACrowdFlowExitSign::GetExitSignDestination() const
 	return ExitSignAgentDestination;
 }
 
-bool ACrowdFlowExitSign::IsDefaultPath() const
+bool ACrowdFlowExitSign::IsKnownExit() const
 {
-	return DefaultPath;
+	return KnownExit;
 }
+
+int32 ACrowdFlowExitSign::GetAgentCount() const
+{
+	return Agents.Num();
+}
+
+void ACrowdFlowExitSign::FollowSign(ACrowdFlowAgent* FollowingAgent) 
+{
+	Agents.AddUnique(FollowingAgent);
+}
+
+void ACrowdFlowExitSign::UnfollowSign(ACrowdFlowAgent* FollowingAgent)
+{
+	Agents.Remove(FollowingAgent);
+}
+
 

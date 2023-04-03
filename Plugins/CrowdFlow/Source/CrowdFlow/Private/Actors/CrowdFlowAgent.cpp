@@ -34,8 +34,8 @@ void ACrowdFlowAgent::BeginPlay()
 	
 	if (AllActors[0])
 	{
-		ExitLocation = AllActors[0]->GetActorLocation();
-		//ExitLocation = FVector(-2500.000000, -496.286185, 1143.345423);
+		//ExitLocation = AllActors[0]->GetActorLocation();
+		ExitLocation = FVector(-2500.000000, -496.286185, 1143.345423);
 	}
 	SphereRadius = SphereComponent->GetStaticMesh()->GetBounds().SphereRadius;
 	
@@ -159,6 +159,30 @@ bool ACrowdFlowAgent::IsBestMove(FMove NewMove) const
 	return true;
 }
 
+void ACrowdFlowAgent::CalculateNextMicroMove()
+{
+	// Move system overhall
+	/*if (!ActiveMacroMove)
+	{
+		return;
+	}
+
+	FVector Heuristic = ActiveMacroMove->Direction;
+	float DegreesBetweenMove = 360 / TurnSmoothness;
+	for (int32 i = 0; i < 360; i += DegreesBetweenMove)
+	{
+		FMove NewMove;
+		FVector NewDirection = ForwardVector.RotateAngleAxis(i, FVector(0, 0, 1));
+		NewMove.Direction = NewDirection;
+		NewMove.Units = UnitsPerMove;
+
+		if (IsBestMove(NewMove))
+		{
+			NextMove = NewMove;
+		}
+	}*/
+}
+
 void ACrowdFlowAgent::ExecuteNextMove()
 {
 	MoveTowardsDirection(NextMove.Direction, NextMove.Units);
@@ -166,7 +190,8 @@ void ACrowdFlowAgent::ExecuteNextMove()
 
 void ACrowdFlowAgent::ClearMoveQueue()
 {
-	MoveQueue.Empty();
+	// Move system overhaul
+	//MoveExecutionQ.Empty();
 	CurrentUnitsLeft = 0;
 	MovementBlockedDelegate.RemoveAll(this);
 	MovementFinishedDelegate.RemoveAll(this);
@@ -205,10 +230,6 @@ void ACrowdFlowAgent::MoveToLocation(const FVector Destination)
 
 void ACrowdFlowAgent::MoveToExit(ACrowdFlowExitSign* ExitSign)
 {
-	if (!ExitSign->IsDefaultPath())
-	{
-		return;
-	}
 	// Don't move to this sign if we have already moved to it before.
 	if (ExitSign == VisibleExitSign || ExitSign == LastVisibleExitSign)
 	{
@@ -217,12 +238,13 @@ void ACrowdFlowAgent::MoveToExit(ACrowdFlowExitSign* ExitSign)
 
 	GetWorld()->GetTimerManager().ClearTimer(TH_Movement);
 	VisibleExitSign = ExitSign;
+	VisibleExitSign->FollowSign(this);
 
 	if (VisibleExitSign)
 	{
 		FVector ExitDestination = VisibleExitSign->GetActorLocation();
 		ExitDestination.Z = GetActorLocation().Z;
-		MoveToLocation(ExitDestination);
+		//MoveToLocation(ExitDestination);5
 
 		FVector CurrentLocation = GetActorLocation();
 		int32 Units = (int32)FVector::Distance(CurrentLocation, ExitDestination);
@@ -309,18 +331,24 @@ void ACrowdFlowAgent::OnReachedExit()
 {
 	MovementFinishedDelegate.RemoveDynamic(this, &ACrowdFlowAgent::OnReachedExit);
 	
+	if (!VisibleExitSign)
+	{
+		FText();
+		return;
+	}
 	//LastVisibleExitSign = VisibleExitSign;
 
-	CurrentUnitsLeft = UnitsToMovePastExit;
 	//FVector Destination = GetActorLocation() + (-VisibleExitSign->GetActorForwardVector() * UnitsToMovePastExit);
 
 	FVector Direction = -VisibleExitSign->GetActorForwardVector();
+	CurrentUnitsLeft = UnitsToMovePastExit;
 
 	FTimerDelegate Delegate;
 	Delegate.BindUFunction(this, "MoveTillUnitAmount", Direction);
 	GetWorld()->GetTimerManager().SetTimer(TH_Movement, Delegate, Speed, true);
 		
 	LastVisibleExitSign = VisibleExitSign;
+	VisibleExitSign->UnfollowSign(this);
 	VisibleExitSign = nullptr;
 }
 
@@ -334,10 +362,11 @@ void ACrowdFlowAgent::Tick(float DeltaTime)
 		DrawDebugLine(GetWorld(), GetActorLocation(), ExitLocation, FColor::Red, false);
 	}
 	
-	if (ActiveMove == nullptr) 
+	// Move system overhaul
+	/*if (ActiveMacroMove == nullptr) 
 	{
-		MoveQueue.Dequeue(ActiveMove OUT);
-	}
+		MacroMoveQ.Dequeue(ActiveMacroMove OUT);
+	}*/
 
 }
 
@@ -376,6 +405,11 @@ void ACrowdFlowAgent::FindRightMostWall()
 
 	// Bind function to trigger when right most wall is found
 	MovementBlockedDelegate.AddDynamic(this, &ACrowdFlowAgent::OnFoundRightMostWall);
+}
+
+void ACrowdFlowAgent::ExecuteActiveMove()
+{
+
 }
 
 void ACrowdFlowAgent::FollowRightMostWall()
@@ -424,7 +458,7 @@ void ACrowdFlowAgent::SeeExit(ACrowdFlowExitSign* ExitSign)
 		return;
 	}
 
-	if (ExitSign->IsDefaultPath())
+	if (ExitSign->IsKnownExit())
 	{
 		MoveToExit(ExitSign);
 	}

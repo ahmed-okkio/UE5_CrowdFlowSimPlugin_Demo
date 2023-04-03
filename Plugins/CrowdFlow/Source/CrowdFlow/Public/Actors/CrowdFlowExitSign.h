@@ -33,11 +33,11 @@ protected:
 	bool DetectionActive = false;
 
 	
-	UPROPERTY(EditInstanceOnly)
-	bool DefaultPath = false;
+	UPROPERTY(VisibleInstanceOnly)
+	TArray<ACrowdFlowAgent*> Agents;
 
 	UPROPERTY(EditInstanceOnly)
-	bool DefaultPath = false;
+	bool KnownExit = false;
 
 	UPROPERTY(EditInstanceOnly)
 	bool DrawDetectionDebug = false;
@@ -70,6 +70,15 @@ public:
 
 	FVector GetExitSignDestination() const;
 
-	bool IsDefaultPath() const;
+	bool IsKnownExit() const;
+
+	int32 GetAgentCount() const;
+
+	void FollowSign(ACrowdFlowAgent* FollowingAgent);
+
+	void UnfollowSign(ACrowdFlowAgent* FollowingAgent);
+
+	
+
 
 };

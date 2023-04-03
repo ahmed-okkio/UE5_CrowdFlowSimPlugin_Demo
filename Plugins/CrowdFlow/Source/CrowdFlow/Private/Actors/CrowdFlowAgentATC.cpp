@@ -12,8 +12,30 @@ void ACrowdFlowAgentATC::SeeExit(ACrowdFlowExitSign* ExitSign)
 		return;
 	}
 
-	if (!ExitSign->IsDefaultPath())
+	// If this is the first sign encountered
+	if (VisibleExitSign == nullptr)
 	{
 		MoveToExit(ExitSign);
+		FText();
+		return;
 	}
+
+	if (VisibleExitSign != ExitSign)
+	{
+		if (VisibleExitSign->GetAgentCount() > ExitSign->GetAgentCount())
+		{
+			MoveToExit(ExitSign);
+		}
+		else if (VisibleExitSign->GetAgentCount() == ExitSign->GetAgentCount())
+		{
+			if (VisibleExitSign->IsKnownExit())
+			{
+				MoveToExit(VisibleExitSign);
+			}
+		}
+	}
+
+	
+
+	
 }

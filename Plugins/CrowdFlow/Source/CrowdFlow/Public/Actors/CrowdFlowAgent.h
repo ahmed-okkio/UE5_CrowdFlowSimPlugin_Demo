@@ -99,9 +99,14 @@ protected:
 	
 	FMove NextMove;
 
-	FMove* ActiveMove = nullptr;
-	
-	TQueue<FMove*> MoveQueue;
+	// Move system overhaul
+	//FMove* ActiveMacroMove = nullptr;
+
+	//TQueue<FMove*> MacroMoveQ;
+	//TQueue<FMove*> MicroMoveQ;
+
+	//TQueue<FMove*> MoveExecutionQ;
+
 	
 	ACrowdFlowExitSign* VisibleExitSign = nullptr;
 
@@ -137,7 +142,11 @@ protected:
 	
 	bool IsBestMove(FMove NewMove) const;
 	
+	void CalculateNextMicroMove();
+
 	void ExecuteNextMove();
+
+	void ExecuteActiveMove();
 
 	void ClearMoveQueue();
 
