@@ -37,6 +37,9 @@ protected:
 	bool DefaultPath = false;
 
 	UPROPERTY(EditInstanceOnly)
+	bool DefaultPath = false;
+
+	UPROPERTY(EditInstanceOnly)
 	bool DrawDetectionDebug = false;
 
 	UPROPERTY(EditInstanceOnly)

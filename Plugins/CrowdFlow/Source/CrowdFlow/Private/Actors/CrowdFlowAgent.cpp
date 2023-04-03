@@ -205,6 +205,10 @@ void ACrowdFlowAgent::MoveToLocation(const FVector Destination)
 
 void ACrowdFlowAgent::MoveToExit(ACrowdFlowExitSign* ExitSign)
 {
+	if (!ExitSign->IsDefaultPath())
+	{
+		return;
+	}
 	// Don't move to this sign if we have already moved to it before.
 	if (ExitSign == VisibleExitSign || ExitSign == LastVisibleExitSign)
 	{
