@@ -33,6 +33,9 @@ protected:
 	bool DetectionActive = false;
 
 	UPROPERTY(EditInstanceOnly)
+	bool DefaultPath = false;
+
+	UPROPERTY(EditInstanceOnly)
 	bool DrawDetectionDebug = false;
 
 	UPROPERTY(EditInstanceOnly)
@@ -62,5 +65,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	FVector GetExitSignDestination() const;
+
+	bool IsDefaultPath() const;
 
 };
