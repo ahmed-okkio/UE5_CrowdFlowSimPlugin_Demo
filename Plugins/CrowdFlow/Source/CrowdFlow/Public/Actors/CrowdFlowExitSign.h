@@ -32,6 +32,10 @@ protected:
 
 	bool DetectionActive = false;
 
+	
+	UPROPERTY(EditInstanceOnly)
+	bool DefaultPath = false;
+
 	UPROPERTY(EditInstanceOnly)
 	bool DefaultPath = false;
 
