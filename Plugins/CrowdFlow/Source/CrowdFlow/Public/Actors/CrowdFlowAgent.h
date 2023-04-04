@@ -108,9 +108,9 @@ protected:
 	//TQueue<FMove*> MoveExecutionQ;
 
 	
-	ACrowdFlowExitSign* VisibleExitSign = nullptr;
+	ACrowdFlowExitSign* ExitSignBeingFollowed = nullptr;
 
-	ACrowdFlowExitSign* LastVisibleExitSign = nullptr;
+	ACrowdFlowExitSign* LastFollowedExitSign = nullptr;
 
 	ACrowdFlowExitStaircase* CurrentStaircase = nullptr;
 	
@@ -170,6 +170,9 @@ protected:
 
 	UFUNCTION()
 	void OnReachedExit();
+
+	UFUNCTION()
+	void OnLeftExit();
 
 	UFUNCTION()
 	void OnFoundRightMostWall();
