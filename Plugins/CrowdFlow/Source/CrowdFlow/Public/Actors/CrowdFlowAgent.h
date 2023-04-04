@@ -162,6 +162,9 @@ protected:
 
 	void FollowLeftMostWall();
 
+	FVector GetNearestExitLocation();
+
+
 	UFUNCTION()
 	void MoveTillUnitAmount(FVector Direction);
 

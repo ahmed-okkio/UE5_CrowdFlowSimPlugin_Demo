@@ -34,8 +34,9 @@ void ACrowdFlowAgent::BeginPlay()
 	
 	if (AllActors[0])
 	{
-		//ExitLocation = AllActors[0]->GetActorLocation();
-		ExitLocation = FVector(-2500.000000, -496.286185, 1143.345423);
+		ExitLocation = GetNearestExitLocation();
+		//ExitLocation = FVector(-2500.000000, -496.286185, 1143.345423);
+
 	}
 	SphereRadius = SphereComponent->GetStaticMesh()->GetBounds().SphereRadius;
 	
@@ -250,7 +251,7 @@ void ACrowdFlowAgent::MoveToExit(ACrowdFlowExitSign* ExitSign)
 
 	if (ExitSignBeingFollowed)
 	{
-		FVector ExitDestination = ExitSignBeingFollowed->GetActorLocation();
+		FVector ExitDestination = ExitSignBeingFollowed->GetExitSignDestination();
 		ExitDestination.Z = GetActorLocation().Z;
 		//MoveToLocation(ExitDestination);
 
@@ -478,6 +479,28 @@ void ACrowdFlowAgent::SeeExit(ACrowdFlowExitSign* ExitSign)
 	{
 		MoveToExit(ExitSign);
 	}
+}
+
+FVector ACrowdFlowAgent::GetNearestExitLocation()
+{
+	TArray<AActor*> Exits;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACrowdFlowExit::StaticClass(), Exits);
+	ACrowdFlowExit* NearestExit = nullptr;
+	for (auto Exit : Exits)
+	{
+		if (NearestExit == nullptr)
+		{
+			NearestExit = Cast<ACrowdFlowExit>(Exit);
+		}
+		else
+		{
+			if (Exit->GetDistanceTo(this) > NearestExit->GetDistanceTo(this))
+			{
+				NearestExit = Cast<ACrowdFlowExit>(Exit);
+			}
+		}
+	}
+	return NearestExit ? NearestExit->GetActorLocation() : FVector(0, 0, 0);
 }
 
 void ACrowdFlowAgent::OnFoundLeftMostWall()

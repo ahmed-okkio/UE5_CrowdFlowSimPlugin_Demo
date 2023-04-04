@@ -17,7 +17,8 @@ ACrowdFlowExitSign::ACrowdFlowExitSign()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-	BoundingBox = FVector(100, 100, 100);
+	DetectionRange = FVector(100, 100, 100);
+	PhysicalExitBounds = FVector(50, 100, 100);
 
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
 }
@@ -80,19 +81,19 @@ void ACrowdFlowExitSign::BeginTraceForAgents()
 
 void ACrowdFlowExitSign::TraceForAgents()
 {		
-		FVector Center = (GetActorLocation() + Offset) + (GetActorForwardVector().GetSafeNormal() * BoundingBox.X);
+		FVector Center = (GetActorLocation() + DetectionRangeOffset) + (GetActorForwardVector().GetSafeNormal() * DetectionRange.X);
 		FRotator Rotation = GetActorRotation();
 		TArray<FHitResult> HitResults;
 		TArray<TEnumAsByte<EObjectTypeQuery>> HitObjectTypes;
 		TArray<AActor*, FDefaultAllocator> ignoredActors;
 
 		HitObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_GameTraceChannel1));
-		bool bHit = GetWorld()->SweepMultiByChannel(HitResults, Center, Center, Rotation.Quaternion(), ECollisionChannel::ECC_GameTraceChannel1, FCollisionShape::MakeBox(BoundingBox), FCollisionQueryParams());
-		//FVector Center = (GetActorLocation() + Offset) + GetActorForwardVector() * BoundingBox.X;
+		bool bHit = GetWorld()->SweepMultiByChannel(HitResults, Center, Center, Rotation.Quaternion(), ECollisionChannel::ECC_GameTraceChannel1, FCollisionShape::MakeBox(DetectionRange), FCollisionQueryParams());
+		//FVector Center = (GetActorLocation() + Offset) + GetActorForwardVector() * DetectionRange.X;
 
 		if (!bHit)
 		{
-			DrawDebugBox(GetWorld(), Center, BoundingBox, GetActorRotation().Quaternion(), FColor::Blue, false, TraceRate, 0, 5);
+			DrawDebugBox(GetWorld(), Center, DetectionRange, GetActorRotation().Quaternion(), FColor::Blue, false, TraceRate, 0, 5);
 			return;
 		}
 
@@ -104,8 +105,8 @@ void ACrowdFlowExitSign::TraceForAgents()
 				return;
 			}
 
-			//FVector Center = (GetActorLocation() + Offset) + GetActorForwardVector() * BoundingBox.X;
-			DrawDebugBox(GetWorld(), Center, BoundingBox, GetActorRotation().Quaternion(), KnownExit ? FColor::Green : FColor::Orange, false, TraceRate, 0, 5);
+			//FVector Center = (GetActorLocation() + Offset) + GetActorForwardVector() * DetectionRange.X;
+			DrawDebugBox(GetWorld(), Center, DetectionRange, GetActorRotation().Quaternion(), KnownExit ? FColor::Emerald : FColor::Orange, false, TraceRate, 0, 5);
 
 			Agent->SeeExit(this);
 		}
@@ -120,16 +121,22 @@ void ACrowdFlowExitSign::StopTraceForAgents()
 void ACrowdFlowExitSign::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	if (!HasActorBegunPlay() && DrawDetectionDebug)
+	if (!HasActorBegunPlay() && ShowDetectionRange)
 	{
-		FVector Center = (GetActorLocation() + Offset) + GetActorForwardVector() * BoundingBox.X;
-		DrawDebugBox(GetWorld(), Center, BoundingBox, GetActorRotation().Quaternion(), KnownExit? FColor::Green : FColor::Orange, false);
+		FVector Center = (GetActorLocation() + DetectionRangeOffset) + GetActorForwardVector() * DetectionRange.X;
+		DrawDebugBox(GetWorld(), Center, DetectionRange, GetActorRotation().Quaternion(), KnownExit? FColor::Emerald : FColor::Orange, false);
+	}
+
+	if (!HasActorBegunPlay() && ShowPhysicalExitBounds)
+	{
+		FVector Center = (GetActorLocation() + PhysicalExitOffset) + GetActorForwardVector() * PhysicalExitBounds.X;
+		DrawDebugBox(GetWorld(), Center, PhysicalExitBounds, GetActorRotation().Quaternion(), FColor::Silver , false);
 	}
 }
 
 FVector ACrowdFlowExitSign::GetExitSignDestination() const
 {
-	return ExitSignAgentDestination;
+	return (GetActorLocation() + PhysicalExitOffset) + GetActorForwardVector() * PhysicalExitBounds.X;
 }
 
 bool ACrowdFlowExitSign::IsKnownExit() const

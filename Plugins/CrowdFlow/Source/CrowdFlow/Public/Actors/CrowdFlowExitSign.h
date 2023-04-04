@@ -34,19 +34,28 @@ protected:
 
 	
 	UPROPERTY(VisibleInstanceOnly)
-	TArray<ACrowdFlowAgent*> Agents;
+	TArray<class ACrowdFlowAgent*> Agents;
 
 	UPROPERTY(EditInstanceOnly)
 	bool KnownExit = false;
 
 	UPROPERTY(EditInstanceOnly)
-	bool DrawDetectionDebug = false;
+	bool ShowDetectionRange = false;
 
 	UPROPERTY(EditInstanceOnly)
-	FVector BoundingBox;
+	bool ShowPhysicalExitBounds = false;
 
 	UPROPERTY(EditInstanceOnly)
-	FVector Offset;
+	FVector DetectionRange;
+
+	UPROPERTY(EditInstanceOnly)
+	FVector DetectionRangeOffset;
+
+	UPROPERTY(EditInstanceOnly)
+	FVector PhysicalExitBounds;
+
+	UPROPERTY(EditInstanceOnly)
+	FVector PhysicalExitOffset;
 
 	FVector ExitSignAgentDestination;
 
