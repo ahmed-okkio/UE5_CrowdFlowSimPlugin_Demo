@@ -4,16 +4,16 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "CrowdFlowExit.generated.h"
+#include "CrowdFlowFinalDestination.generated.h"
 
 UCLASS()
-class CROWDFLOW_API ACrowdFlowExit : public AActor
+class CROWDFLOW_API ACrowdFlowFinalDestination : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
-	ACrowdFlowExit();
+	ACrowdFlowFinalDestination();
 
 protected:
 	// Called when the game starts or when spawned

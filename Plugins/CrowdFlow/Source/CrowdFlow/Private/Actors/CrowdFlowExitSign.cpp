@@ -108,7 +108,7 @@ void ACrowdFlowExitSign::TraceForAgents()
 			//FVector Center = (GetActorLocation() + Offset) + GetActorForwardVector() * DetectionRange.X;
 			DrawDebugBox(GetWorld(), Center, DetectionRange, GetActorRotation().Quaternion(), KnownExit ? FColor::Emerald : FColor::Orange, false, TraceRate, 0, 5);
 
-			Agent->SeeExit(this);
+			Agent->SeeExitSign(this);
 		}
 }
 

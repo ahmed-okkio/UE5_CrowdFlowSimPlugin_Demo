@@ -5,7 +5,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Actors/CrowdFlowExitSign.h"
-#include "Actors/CrowdFlowExit.h"
+#include "Actors/CrowdFlowFinalDestination.h"
 #include "Actors/CrowdFlowExitStaircase.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -30,17 +30,18 @@ void ACrowdFlowAgent::BeginPlay()
 	Super::BeginPlay();
 	
 	TArray<AActor*> AllActors;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACrowdFlowExit::StaticClass(), AllActors);
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACrowdFlowFinalDestination::StaticClass(), AllActors);
 	
 	if (AllActors[0])
 	{
-		ExitLocation = GetNearestExitLocation();
-		//ExitLocation = FVector(-2500.000000, -496.286185, 1143.345423);
-
+		FinalDestination = AllActors[0]->GetActorLocation();
 	}
+
+	NearestExitLocation = GetNearestExitLocation();
+
 	SphereRadius = SphereComponent->GetStaticMesh()->GetBounds().SphereRadius;
 	
-	BeginLookingForDirectMoveToExit();
+	BeginLookingForDirectMoveToFinalDestination();
 	CalculateNextMove();
 	ExecuteNextMove();
 }
@@ -59,14 +60,14 @@ void ACrowdFlowAgent::LookForPathAround()
 
 }
 
-bool ACrowdFlowAgent::IsExitVisible() const
+bool ACrowdFlowAgent::IsFinalDestinationVisible() const
 {
 	FHitResult Hit;
-	GetWorld()->LineTraceSingleByChannel(Hit, GetActorLocation(), ExitLocation, ECollisionChannel::ECC_GameTraceChannel2);
+	GetWorld()->LineTraceSingleByChannel(Hit, GetActorLocation(), FinalDestination, ECollisionChannel::ECC_GameTraceChannel2);
 	return !Hit.bBlockingHit;
 }
 
-bool ACrowdFlowAgent::IsExitOnSameFloor() const
+bool ACrowdFlowAgent::IsExitOnSameFloor(FVector ExitLocation) const
 {
 	float CurrentHeight = GetActorLocation().Z;
 	float LowerBound = ExitLocation.Z - SameFloorHeightMargin;
@@ -75,17 +76,17 @@ bool ACrowdFlowAgent::IsExitOnSameFloor() const
 	return (CurrentHeight >= LowerBound && CurrentHeight <= UpperBound);
 }
 
-void ACrowdFlowAgent::AttemptDirectMoveToExit()
+void ACrowdFlowAgent::AttemptDirectMoveToFinalDestination()
 {
-	if (IsExitVisible() && IsExitOnSameFloor())
+	if (IsFinalDestinationVisible() && IsExitOnSameFloor(FinalDestination))
 	{
 		FoundDirectMoveToExit = true;
 
 		NextMove = FMove();
 
-		NextMove.Direction = ExitLocation - GetActorLocation();
+		NextMove.Direction = FinalDestination - GetActorLocation();
 		NextMove.Direction.Normalize();
-		NextMove.Units = FVector::Distance(ExitLocation, GetActorLocation());
+		NextMove.Units = FVector::Distance(FinalDestination, GetActorLocation());
 
 		ClearMoveQueue();
 		ExecuteNextMove();
@@ -96,9 +97,9 @@ void ACrowdFlowAgent::AttemptDirectMoveToExit()
 	}
 }
 
-void ACrowdFlowAgent::BeginLookingForDirectMoveToExit()
+void ACrowdFlowAgent::BeginLookingForDirectMoveToFinalDestination()
 {
-	GetWorld()->GetTimerManager().SetTimer(TH_DirectMove, this, &ACrowdFlowAgent::AttemptDirectMoveToExit, DirectMoveSearchRate, true);
+	GetWorld()->GetTimerManager().SetTimer(TH_DirectMove, this, &ACrowdFlowAgent::AttemptDirectMoveToFinalDestination, DirectMoveSearchRate, true);
 }
 
 void ACrowdFlowAgent::CalculateNextMove()
@@ -130,8 +131,8 @@ bool ACrowdFlowAgent::IsBestMove(FMove NewMove) const
 	FVector BestMoveLocation = CurrentLocation + NextMove.Direction * (NextMove.Units + SphereRadius);
 	FVector NewMoveLocation = CurrentLocation + NewMove.Direction * (NewMove.Units + SphereRadius);
 
-	float BestMoveDistance = FVector::Distance(BestMoveLocation, ExitLocation);
-	float NewMoveDistance = FVector::Distance(NewMoveLocation, ExitLocation);
+	float BestMoveDistance = FVector::Distance(BestMoveLocation, NearestExitLocation);
+	float NewMoveDistance = FVector::Distance(NewMoveLocation, NearestExitLocation);
 
 	
 	FHitResult Hit;
@@ -194,6 +195,7 @@ void ACrowdFlowAgent::ClearMoveQueue()
 	// Move system overhaul
 	//MoveExecutionQ.Empty();
 	CurrentUnitsLeft = 0;
+	ExitSignBeingFollowed = nullptr;
 	MovementBlockedDelegate.RemoveAll(this);
 	MovementFinishedDelegate.RemoveAll(this);
 	GetWorld()->GetTimerManager().ClearTimer(TH_Movement);
@@ -201,7 +203,7 @@ void ACrowdFlowAgent::ClearMoveQueue()
 
 void ACrowdFlowAgent::MoveTowardsDirection(FVector Direction, int32 Units)
 {
-	if (GetDistanceToExit() < ExitReachedRange)
+	if (GetDistanceToFinalDestination() < ExitReachedRange)
 	{
 		return GetWorld()->GetTimerManager().ClearTimer(TH_Movement);
 	}
@@ -376,7 +378,7 @@ void ACrowdFlowAgent::Tick(float DeltaTime)
 	//MoveTowardsDirection(SphereComponent->GetForwardVector(), 5);
 	if (FoundDirectMoveToExit)
 	{
-		DrawDebugLine(GetWorld(), GetActorLocation(), ExitLocation, FColor::Red, false);
+		DrawDebugLine(GetWorld(), GetActorLocation(), FinalDestination, FColor::Red, false);
 	}
 	
 	// Move system overhaul
@@ -468,7 +470,7 @@ void ACrowdFlowAgent::OnFoundRightMostWall()
 	FollowRightMostWall();
 }
 
-void ACrowdFlowAgent::SeeExit(ACrowdFlowExitSign* ExitSign)
+void ACrowdFlowAgent::SeeExitSign(ACrowdFlowExitSign* ExitSign)
 {
 	if (!ExitSign)
 	{
@@ -484,19 +486,28 @@ void ACrowdFlowAgent::SeeExit(ACrowdFlowExitSign* ExitSign)
 FVector ACrowdFlowAgent::GetNearestExitLocation()
 {
 	TArray<AActor*> Exits;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACrowdFlowExit::StaticClass(), Exits);
-	ACrowdFlowExit* NearestExit = nullptr;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACrowdFlowExitSign::StaticClass(), Exits);
+	ACrowdFlowExitSign* NearestExit = nullptr;
 	for (auto Exit : Exits)
 	{
+		ACrowdFlowExitSign* ExitSign  = Cast<ACrowdFlowExitSign>(Exit);
 		if (NearestExit == nullptr)
 		{
-			NearestExit = Cast<ACrowdFlowExit>(Exit);
+			NearestExit = ExitSign;
 		}
 		else
 		{
-			if (Exit->GetDistanceTo(this) > NearestExit->GetDistanceTo(this))
+			if (!IsExitOnSameFloor(ExitSign->GetExitSignDestination()))
 			{
-				NearestExit = Cast<ACrowdFlowExit>(Exit);
+				continue;
+			}
+
+			float DistanceToNewExit = FVector::Distance(GetActorLocation(), ExitSign->GetExitSignDestination());
+			float DistanceToNearestExit = FVector::Distance(GetActorLocation(), NearestExit->GetExitSignDestination());
+
+			if (DistanceToNewExit < DistanceToNearestExit)
+			{
+				NearestExit = ExitSign;
 			}
 		}
 	}
@@ -513,9 +524,9 @@ int32 ACrowdFlowAgent::GetCurrentUnitsLeft()
 	return CurrentUnitsLeft;
 }
 
-int32 ACrowdFlowAgent::GetDistanceToExit()
+int32 ACrowdFlowAgent::GetDistanceToFinalDestination()
 {
-	return FVector::Distance(GetActorLocation(), ExitLocation);
+	return FVector::Distance(GetActorLocation(), FinalDestination);
 }
 
 

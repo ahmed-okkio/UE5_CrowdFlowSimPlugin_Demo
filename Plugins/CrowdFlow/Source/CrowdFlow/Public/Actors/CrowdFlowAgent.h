@@ -59,7 +59,7 @@ protected:
 	EAgentBehaviour AgentBehaviour = EAgentBehaviour::FollowTheCrowd;
 
 	UPROPERTY(EditDefaultsOnly)
-	float SameFloorHeightMargin = 50.f;
+	float SameFloorHeightMargin = 200.f;
 
 	UPROPERTY(EditDefaultsOnly)
 	float MaxStepHeight = 25.f;
@@ -80,7 +80,7 @@ protected:
 	float TurnSmoothness = 8.0f;
 
 	UPROPERTY(EditDefaultsOnly)
-	float UnitsToMovePastExit = 50.0f;
+	float UnitsToMovePastExit = 500.0f;
 
 	float SphereRadius;
 
@@ -130,13 +130,13 @@ protected:
 
 	void MoveToLocation(const FVector Destination);
 	
-	bool IsExitVisible() const;
+	bool IsFinalDestinationVisible() const;
 
-	bool IsExitOnSameFloor() const;
+	bool IsExitOnSameFloor(FVector ExitLocation) const;
 	
-	void AttemptDirectMoveToExit();
+	void AttemptDirectMoveToFinalDestination();
 
-	void BeginLookingForDirectMoveToExit();
+	void BeginLookingForDirectMoveToFinalDestination();
 	
 	void CalculateNextMove();
 	
@@ -194,17 +194,17 @@ public:
 	UPROPERTY(EditAnywhere)
 	class UStaticMeshComponent* SphereComponent;
 
-	FVector ExitLocation;
+	FVector FinalDestination;
 
-	FVector ExitLocation1;
+	FVector NearestExitLocation;
 
 	
 	int32 CurrentUnitsLeft = 0;
 
 	UFUNCTION(BlueprintCallable, Category = "Movement")
-	int32 GetDistanceToExit();
+	int32 GetDistanceToFinalDestination();
 
-	virtual void SeeExit(ACrowdFlowExitSign* ExitSign);
+	virtual void SeeExitSign(ACrowdFlowExitSign* ExitSign);
 
 	void MoveToExit(ACrowdFlowExitSign* ExitSign);
 

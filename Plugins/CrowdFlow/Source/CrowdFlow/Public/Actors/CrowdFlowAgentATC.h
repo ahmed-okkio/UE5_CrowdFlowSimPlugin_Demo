@@ -16,6 +16,6 @@ class CROWDFLOW_API ACrowdFlowAgentATC : public ACrowdFlowAgent
 
 public:
 
-	virtual void SeeExit(ACrowdFlowExitSign* ExitSign) override;
+	virtual void SeeExitSign(ACrowdFlowExitSign* ExitSign) override;
 	
 };

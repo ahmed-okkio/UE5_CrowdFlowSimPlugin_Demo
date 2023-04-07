@@ -5,7 +5,7 @@
 #include "Actors/CrowdFlowExitSign.h"
 
 
-void ACrowdFlowAgentATC::SeeExit(ACrowdFlowExitSign* ExitSign)
+void ACrowdFlowAgentATC::SeeExitSign(ACrowdFlowExitSign* ExitSign)
 {
 	if (!ExitSign)
 	{
@@ -16,7 +16,6 @@ void ACrowdFlowAgentATC::SeeExit(ACrowdFlowExitSign* ExitSign)
 	if (!ExitSignBeingFollowed)
 	{
 		MoveToExit(ExitSign);
-		FText();
 		return;
 	}
 
@@ -24,6 +23,7 @@ void ACrowdFlowAgentATC::SeeExit(ACrowdFlowExitSign* ExitSign)
 	{
 		MoveToExit(ExitSign);
 	}
+
 	else if (ExitSign->GetAgentCount() == ExitSignBeingFollowed->GetAgentCount())
 	{
 		if (ExitSignBeingFollowed->IsKnownExit())
