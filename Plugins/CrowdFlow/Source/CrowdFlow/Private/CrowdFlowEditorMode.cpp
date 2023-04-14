@@ -13,6 +13,7 @@
 //////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////// 
 #include "Tools/CrowdFlowSimpleTool.h"
+#include "Tools/CrowdFlowAgentsTool.h"
 #include "Tools/CrowdFlowInteractiveTool.h"
 
 // step 2: register a ToolBuilder in FCrowdFlowEditorMode::Enter() below
@@ -22,8 +23,9 @@
 
 const FEditorModeID UCrowdFlowEditorMode::EM_CrowdFlowEditorModeId = TEXT("EM_CrowdFlowEditorMode");
 
-FString UCrowdFlowEditorMode::SimpleToolName = TEXT("CrowdFlow_ActorInfoTool");
-FString UCrowdFlowEditorMode::InteractiveToolName = TEXT("CrowdFlow_MeasureDistanceTool");
+FString UCrowdFlowEditorMode::AgentsToolName = TEXT("CrowdFlow_AgentsTool");
+FString UCrowdFlowEditorMode::ExitsToolName = TEXT("CrowdFlow_ExitsTool");
+FString UCrowdFlowEditorMode::StaircaseToolName = TEXT("CrowdFlow_StaircaseTool");
 
 
 UCrowdFlowEditorMode::UCrowdFlowEditorMode()
@@ -59,11 +61,13 @@ void UCrowdFlowEditorMode::Enter()
 	////////////////////////////////////////////////////////////////////////// 
 	const FCrowdFlowEditorModeCommands& SampleToolCommands = FCrowdFlowEditorModeCommands::Get();
 
-	RegisterTool(SampleToolCommands.SimpleTool, SimpleToolName, NewObject<UCrowdFlowSimpleToolBuilder>(this));
-	RegisterTool(SampleToolCommands.InteractiveTool, InteractiveToolName, NewObject<UCrowdFlowInteractiveToolBuilder>(this));
+	RegisterTool(SampleToolCommands.AgentsTool, AgentsToolName, NewObject<UCrowdFlowAgentsToolBuilder>(this));
+	RegisterTool(SampleToolCommands.ExitsTool, ExitsToolName, NewObject<UCrowdFlowInteractiveToolBuilder>(this));
+	RegisterTool(SampleToolCommands.StaircaseTool, StaircaseToolName, NewObject<UCrowdFlowInteractiveToolBuilder>(this));
+
 
 	// active tool type is not relevant here, we just set to default
-	GetToolManager()->SelectActiveToolType(EToolSide::Left, SimpleToolName);
+	GetToolManager()->SelectActiveToolType(EToolSide::Left, AgentsToolName);
 }
 
 void UCrowdFlowEditorMode::CreateToolkit()

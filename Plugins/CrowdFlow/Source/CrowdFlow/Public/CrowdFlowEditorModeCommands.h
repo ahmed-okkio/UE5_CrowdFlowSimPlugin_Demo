@@ -16,8 +16,10 @@ public:
 	virtual void RegisterCommands() override;
 	static TMap<FName, TArray<TSharedPtr<FUICommandInfo>>> GetCommands();
 
-	TSharedPtr<FUICommandInfo> SimpleTool;
-	TSharedPtr<FUICommandInfo> InteractiveTool;
+	TSharedPtr<FUICommandInfo> AgentsTool;
+	TSharedPtr<FUICommandInfo> ExitsTool;
+	TSharedPtr<FUICommandInfo> StaircaseTool;
+
 
 protected:
 	TMap<FName, TArray<TSharedPtr<FUICommandInfo>>> Commands;

@@ -60,7 +60,7 @@ void UCrowdFlowInteractiveTool::Setup()
 	AddInputBehavior(MouseBehavior);
 
 	// Create the property set and register it with the Tool
-	Properties = NewObject<UCrowdFlowInteractiveToolProperties>(this, "Measurement");
+	Properties = NewObject<UCrowdFlowInteractiveToolProperties>(this, "Test");
 	AddToolPropertySource(Properties);
 	
 	bSecondPointModifierDown = false;

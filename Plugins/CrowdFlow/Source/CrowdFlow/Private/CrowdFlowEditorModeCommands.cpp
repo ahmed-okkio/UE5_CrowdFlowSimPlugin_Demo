@@ -18,11 +18,13 @@ void FCrowdFlowEditorModeCommands::RegisterCommands()
 {
 	TArray <TSharedPtr<FUICommandInfo>>& ToolCommands = Commands.FindOrAdd(NAME_Default);
 
-	UI_COMMAND(SimpleTool, "Show Actor Info", "Opens message box with info about a clicked actor", EUserInterfaceActionType::Button, FInputChord());
-	ToolCommands.Add(SimpleTool);
+	UI_COMMAND(AgentsTool, "Agents", "Opens a menu to select and place agents of different behaviours in the 3D enviornment.", EUserInterfaceActionType::ToggleButton, FInputChord());
+	ToolCommands.Add(AgentsTool);
 
-	UI_COMMAND(InteractiveTool, "Measure Distance", "Measures distance between 2 points (click to set origin, shift-click to set end point)", EUserInterfaceActionType::ToggleButton, FInputChord());
-	ToolCommands.Add(InteractiveTool);
+	UI_COMMAND(ExitsTool, "Exits", "Opens a menu to select place exit signs around the 3D enviornment.", EUserInterfaceActionType::ToggleButton, FInputChord());
+	ToolCommands.Add(ExitsTool);
+	UI_COMMAND(StaircaseTool, "Staircases", "Opens a menu to select place staircases around the 3D enviornment.", EUserInterfaceActionType::ToggleButton, FInputChord());
+	ToolCommands.Add(StaircaseTool);
 }
 
 TMap<FName, TArray<TSharedPtr<FUICommandInfo>>> FCrowdFlowEditorModeCommands::GetCommands()

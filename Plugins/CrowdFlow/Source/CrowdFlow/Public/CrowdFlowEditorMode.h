@@ -22,8 +22,9 @@ class UCrowdFlowEditorMode : public UEdMode
 public:
 	const static FEditorModeID EM_CrowdFlowEditorModeId;
 
-	static FString SimpleToolName;
-	static FString InteractiveToolName;
+	static FString AgentsToolName;
+	static FString ExitsToolName;
+	static FString StaircaseToolName;
 
 	UCrowdFlowEditorMode();
 	virtual ~UCrowdFlowEditorMode();
