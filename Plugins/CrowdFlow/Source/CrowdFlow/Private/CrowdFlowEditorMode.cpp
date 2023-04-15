@@ -12,9 +12,8 @@
 // AddYourTool Step 1 - include the header file for your Tools here
 //////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////// 
-#include "Tools/CrowdFlowSimpleTool.h"
 #include "Tools/CrowdFlowAgentsTool.h"
-#include "Tools/CrowdFlowInteractiveTool.h"
+#include "Tools/CrowdFlowExitsTool.h"
 
 // step 2: register a ToolBuilder in FCrowdFlowEditorMode::Enter() below
 
@@ -62,8 +61,7 @@ void UCrowdFlowEditorMode::Enter()
 	const FCrowdFlowEditorModeCommands& SampleToolCommands = FCrowdFlowEditorModeCommands::Get();
 
 	RegisterTool(SampleToolCommands.AgentsTool, AgentsToolName, NewObject<UCrowdFlowAgentsToolBuilder>(this));
-	RegisterTool(SampleToolCommands.ExitsTool, ExitsToolName, NewObject<UCrowdFlowInteractiveToolBuilder>(this));
-	RegisterTool(SampleToolCommands.StaircaseTool, StaircaseToolName, NewObject<UCrowdFlowInteractiveToolBuilder>(this));
+	RegisterTool(SampleToolCommands.ExitsTool, ExitsToolName, NewObject<UCrowdFlowExitsToolBuilder>(this));
 
 
 	// active tool type is not relevant here, we just set to default

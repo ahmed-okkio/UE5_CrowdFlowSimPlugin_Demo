@@ -64,7 +64,7 @@ void ACrowdFlowExitStaircase::Tick(float DeltaTime)
 	if (!HasActorBegunPlay() && DrawDetectionDebug)
 	{
 
-		FVector Center = GetActorLocation();
+		FVector Center = SpriteComponent->GetComponentLocation();
 
 		//Center.Z += BoundingBox.Z;
 
@@ -80,7 +80,7 @@ void ACrowdFlowExitStaircase::BeginTraceForAgents()
 
 void ACrowdFlowExitStaircase::TraceForAgents()
 {
-	FVector Center = GetActorLocation();
+	FVector Center = SpriteComponent->GetComponentLocation();
 	FRotator Rotation = GetActorRotation();
 	TArray<FHitResult> HitResults;
 	TArray<TEnumAsByte<EObjectTypeQuery>> HitObjectTypes;

@@ -23,8 +23,6 @@ void FCrowdFlowEditorModeCommands::RegisterCommands()
 
 	UI_COMMAND(ExitsTool, "Exits", "Opens a menu to select place exit signs around the 3D enviornment.", EUserInterfaceActionType::ToggleButton, FInputChord());
 	ToolCommands.Add(ExitsTool);
-	UI_COMMAND(StaircaseTool, "Staircases", "Opens a menu to select place staircases around the 3D enviornment.", EUserInterfaceActionType::ToggleButton, FInputChord());
-	ToolCommands.Add(StaircaseTool);
 }
 
 TMap<FName, TArray<TSharedPtr<FUICommandInfo>>> FCrowdFlowEditorModeCommands::GetCommands()

@@ -4,46 +4,62 @@
 
 #include "CoreMinimal.h"
 #include "InteractiveToolBuilder.h"
-#include "BaseTools/ClickDragTool.h"
-#include "Actors/CrowdFlowAgent.h"
-#include "CrowdFlowAgentsTool.generated.h"
+#include "BaseBehaviors/SingleClickBehavior.h"
+#include "CrowdFlowExitsTool.generated.h"
 
 /**
  * 
  */
+class ACrowdFlowExitSign;
+class ACrowdFlowExitStaircase;
+class ACrowdFlowFinalDestination;
+UENUM(BlueprintType)
+enum class EExitToolMode : uint8
+{
+	ExitSign UMETA(DisplayName = "Exit Sign"),
+	ExitStaircase UMETA(DisplayName = "Exit Staircase"),
+	FinalDestination UMETA(DisplayName = "Final Destination")
+
+};
+
 UCLASS()
-class UCrowdFlowAgentsToolBuilder : public UInteractiveToolBuilder
+class UCrowdFlowExitsToolBuilder : public UInteractiveToolBuilder
 {
 	GENERATED_BODY()
 
 public:
 	virtual bool CanBuildTool(const FToolBuilderState& SceneState) const override { return true; }
 	virtual UInteractiveTool* BuildTool(const FToolBuilderState& SceneState) const override;
-};
-
+};                                              
 
 /**
  * Property set for the UCrowdFlowInteractiveTool
  */
 UCLASS(Transient)
-class CROWDFLOW_API UCrowdFlowAgentsToolProperties : public UInteractiveToolPropertySet
+class CROWDFLOW_API UCrowdFlowExitsToolProperties : public UInteractiveToolPropertySet
 {
 	GENERATED_BODY()
 
 public:
-	UCrowdFlowAgentsToolProperties();
+	UCrowdFlowExitsToolProperties();
 	
 	/*Toggle placing agents*/
 	UPROPERTY(EditAnywhere, Category = Options)
-	bool PlaceAgentOnClick = false;
+	bool PlaceExitOnClick = false;
 
 	/*Behaviour of Agents to spawn*/
 	UPROPERTY(EditAnywhere, Category = Options)
-	EAgentBehaviour AgentBehaviour = EAgentBehaviour::FollowTheCrowd;
+	EExitToolMode ToolMode = EExitToolMode::ExitSign;
 
 	/*List of agents in the world*/
 	UPROPERTY(VisibleAnywhere, Category = Options)
-	TArray<ACrowdFlowAgent*> AgentsInWorld;
+	TArray<ACrowdFlowExitSign*> ExitSignsInTheWorld;
+
+	UPROPERTY(VisibleAnywhere, Category = Options)
+	TArray<ACrowdFlowExitStaircase*> ExitStaircasesInTheWorld;
+
+	UPROPERTY(VisibleAnywhere, Category = Options)
+	ACrowdFlowFinalDestination* FinalDestination;
 };
 
 
@@ -54,12 +70,12 @@ public:
  * the second point is set by shift-click-dragging the mouse.
  */
 UCLASS()
-class CROWDFLOW_API UCrowdFlowAgentsTool : public UInteractiveTool, public IClickBehaviorTarget
+class CROWDFLOW_API UCrowdFlowExitsTool : public UInteractiveTool, public IClickBehaviorTarget
 {
 	GENERATED_BODY()
 
 public:
-	UCrowdFlowAgentsTool();
+	UCrowdFlowExitsTool();
 
 	virtual void SetWorld(UWorld* World);
 
@@ -73,17 +89,21 @@ public:
 protected:
 	/** Properties of the tool are stored here */
 	UPROPERTY()
-		TObjectPtr<UCrowdFlowAgentsToolProperties> Properties;
+		TObjectPtr<UCrowdFlowExitsToolProperties> Properties;
 
 
 protected:
 
 	UClass* ExitSignClass = nullptr;
 	UClass* ExitStaircaseClass = nullptr;
-	UClass* AUEClass = nullptr;
+	UClass* FinalDestinationClass = nullptr;
 
 	UWorld* TargetWorld = nullptr;		// target World we will raycast into
 
 	UFUNCTION()
-	void OnActorRemovedFromWorld(AActor* DestroyedActor);
+	void OnExitRemovedFromWorld(AActor* DestroyedActor);
+	UFUNCTION()
+	void OnStaircaseRemovedFromWorld(AActor* DestroyedActor);
+	UFUNCTION()
+	void OnFinalDestinationRemovedFromWorld(AActor* DestroyedActor);
 };

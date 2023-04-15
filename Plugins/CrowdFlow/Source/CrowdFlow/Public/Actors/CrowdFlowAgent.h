@@ -82,7 +82,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	float UnitsToMovePastExit = 500.0f;
 
-	float SphereRadius;
+	static float SphereRadius;
 
 	float PersonalSpace = 50.0f;
 
@@ -120,6 +120,9 @@ protected:
 	
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	virtual void PostInitializeComponents() override;
+
 
 	bool IsGrounded();
 
@@ -185,6 +188,8 @@ protected:
 	void OnFoundLeftMostWall();
 
 public:	
+	static float GetSphereRadius();
+
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 	int32 GetCurrentUnitsLeft();
 	

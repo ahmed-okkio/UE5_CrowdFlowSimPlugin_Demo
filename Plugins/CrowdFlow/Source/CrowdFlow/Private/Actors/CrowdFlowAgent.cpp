@@ -9,17 +9,21 @@
 #include "Actors/CrowdFlowExitStaircase.h"
 #include "Kismet/GameplayStatics.h"
 
+float ACrowdFlowAgent::SphereRadius = 100.f;
+
 // Sets default values
 ACrowdFlowAgent::ACrowdFlowAgent()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-	
 
-		SphereComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Sphere"));
-		RootComponent = SphereComponent;
-		static ConstructorHelpers::FObjectFinder<UStaticMesh>SphereMeshAsset(TEXT("StaticMesh'/Engine/BasicShapes/Sphere.Sphere'"));
-		SphereComponent->SetStaticMesh(SphereMeshAsset.Object);
+	SphereComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Sphere"));
+	RootComponent = SphereComponent;
+	static ConstructorHelpers::FObjectFinder<UStaticMesh>SphereMeshAsset(TEXT("StaticMesh'/Engine/BasicShapes/Sphere.Sphere'"));
+	UStaticMesh* SphereMesh = SphereMeshAsset.Object;
+	SphereComponent->SetStaticMesh(SphereMesh);
+	SphereComponent->GetStaticMesh()->SetExtendedBounds(FBoxSphereBounds(FVector::ZeroVector, FVector(SphereRadius), SphereRadius));
+
 		
 	// attach spherecomponent to root
 }
@@ -39,11 +43,16 @@ void ACrowdFlowAgent::BeginPlay()
 
 	NearestExitLocation = GetNearestExitLocation();
 
-	SphereRadius = SphereComponent->GetStaticMesh()->GetBounds().SphereRadius;
 	
 	BeginLookingForDirectMoveToFinalDestination();
 	CalculateNextMove();
 	ExecuteNextMove();
+}
+
+void ACrowdFlowAgent::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+	//SphereComponent->GetStaticMesh()->SetExtendedBounds(FBoxSphereBounds(FVector::ZeroVector, FVector(SphereRadius), SphereRadius));
 }
 
 bool ACrowdFlowAgent::IsGrounded()
@@ -517,6 +526,11 @@ FVector ACrowdFlowAgent::GetNearestExitLocation()
 void ACrowdFlowAgent::OnFoundLeftMostWall()
 {
 	FollowLeftMostWall();
+}
+
+float ACrowdFlowAgent::GetSphereRadius()
+{
+	return SphereRadius;
 }
 
 int32 ACrowdFlowAgent::GetCurrentUnitsLeft()

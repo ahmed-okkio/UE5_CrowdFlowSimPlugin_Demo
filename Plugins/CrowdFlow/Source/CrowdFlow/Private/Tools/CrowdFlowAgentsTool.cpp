@@ -9,12 +9,14 @@
 #include "Actors/CrowdFlowAgentFTC.h"
 #include "Editor/EditorEngine.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Kismet/GameplayStatics.h"
 
 // for raycast into World
 #include "CollisionQueryParams.h"
 #include "Engine/World.h"
 
 #include "SceneManagement.h"
+#include "CrowdFlowAgentsTool.h"
 
 // localization namespace
 #define LOCTEXT_NAMESPACE "UCrowdFlowAgentsTool"
@@ -30,15 +32,8 @@ UInteractiveTool* UCrowdFlowAgentsToolBuilder::BuildTool(const FToolBuilderState
 	return NewTool;
 }
 
-
-// JAH TODO: update comments
-/*
- * Tool
- */
-
 UCrowdFlowAgentsToolProperties::UCrowdFlowAgentsToolProperties()
 {
-	// initialize the points and distance to reasonable values
 }
 
 
@@ -49,7 +44,7 @@ UCrowdFlowAgentsTool::UCrowdFlowAgentsTool()
 	{
 			if (UBlueprint* Blueprint = FTCAsset.Object)
 			{
-				FTCClass = Cast<UBlueprintGeneratedClass>(Blueprint->GeneratedClass);
+				ExitSignClass = Cast<UBlueprintGeneratedClass>(Blueprint->GeneratedClass);
 			}
 	}
 
@@ -58,11 +53,11 @@ UCrowdFlowAgentsTool::UCrowdFlowAgentsTool()
 	{
 		if (UBlueprint* Blueprint = ATCAsset.Object)
 		{
-			ATCClass = Cast<UBlueprintGeneratedClass>(Blueprint->GeneratedClass);
+			ExitStaircaseClass = Cast<UBlueprintGeneratedClass>(Blueprint->GeneratedClass);
 		}
 	}
 
-	static ConstructorHelpers::FObjectFinder<UBlueprint> AUEAsset(TEXT("/CrowdFlow/BP_AgentAUE.BP_AgentAUE"));
+	static ConstructorHelpers::FObjectFinder<UBlueprint> AUEAsset(TEXT("/CrowdFlow/BP_AUEAgent.BP_AUEAgent"));
 	if (AUEAsset.Succeeded())
 	{
 		if (UBlueprint* Blueprint = AUEAsset.Object)
@@ -82,15 +77,8 @@ void UCrowdFlowAgentsTool::SetWorld(UWorld* World)
 void UCrowdFlowAgentsTool::Setup()
 {
 	UInteractiveTool::Setup();
-	
-	
-	
-
 	// Add default mouse input behavior
 	USingleClickInputBehavior* MouseBehavior = NewObject<USingleClickInputBehavior>();
-	// We will use the shift key to indicate that we should move the second point. 
-	// This call tells the Behavior to call our OnUpdateModifierState() function on mouse-down and mouse-move
-	//MouseBehavior->Modifiers.RegisterModifier(MoveSecondPointModifierID, FInputDeviceState::IsShiftKeyDown);
 	MouseBehavior->Initialize(this);
 	AddInputBehavior(MouseBehavior);
 
@@ -98,83 +86,40 @@ void UCrowdFlowAgentsTool::Setup()
 	Properties = NewObject<UCrowdFlowAgentsToolProperties>(this, "AgentsToolProperties");
 	AddToolPropertySource(Properties);
 
-	bSecondPointModifierDown = false;
-	bMoveSecondPoint = false;
-}
+	TArray<AActor*> Agents;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACrowdFlowAgent::StaticClass(), Agents);
 
-
-void UCrowdFlowAgentsTool::OnUpdateModifierState(int ModifierID, bool bIsOn)
-{
-	// keep track of the "second point" modifier (shift key for mouse input)
-	if (ModifierID == MoveSecondPointModifierID)
+	for (AActor* Actor : Agents)
 	{
-		bSecondPointModifierDown = bIsOn;
+		ACrowdFlowAgent* Agent = Cast<ACrowdFlowAgent>(Actor);
+		if (Agent)
+		{
+			Agent->OnDestroyed.AddUniqueDynamic(this, &UCrowdFlowAgentsTool::OnActorRemovedFromWorld);
+			Properties->AgentsInWorld.AddUnique(Agent);
+		}
 	}
 }
 
-
-//FInputRayHit UCrowdFlowAgentsTool::CanBeginClickDragSequence(const FInputDeviceRay& PressPos)
-//{
-//	// we only start drag if press-down is on top of something we can raycast
-//	FVector Temp;
-//	FInputRayHit Result = FindRayHit(PressPos.WorldRay, Temp);
-//	return Result;
-//}
-//
-//
-//void UCrowdFlowAgentsTool::OnClickPress(const FInputDeviceRay& PressPos)
-//{
-//	// determine whether we are moving first or second point for the drag sequence
-//	bMoveSecondPoint = bSecondPointModifierDown;
-//	UpdatePosition(PressPos.WorldRay);
-//}
-//
-//
-//void UCrowdFlowAgentsTool::OnClickDrag(const FInputDeviceRay& DragPos)
-//{
-//	UpdatePosition(DragPos.WorldRay);
-//}
-
-
-FInputRayHit UCrowdFlowAgentsTool::FindRayHit(const FRay& WorldRay, FVector& HitPos)
+void UCrowdFlowAgentsTool::OnClicked(const FInputDeviceRay& ClickPos)
 {
-	// trace a ray into the World
-	FCollisionObjectQueryParams QueryParams(FCollisionObjectQueryParams::AllObjects);
-	FHitResult Result;
-	bool bHitWorld = TargetWorld->LineTraceSingleByObjectType(Result, WorldRay.Origin, WorldRay.PointAt(999999), QueryParams);
-	if (bHitWorld)
+}
+
+void UCrowdFlowAgentsTool::OnActorRemovedFromWorld(AActor* DestroyedActor)
+{
+	ACrowdFlowAgent* DestroyedAgent = Cast<ACrowdFlowAgent>(DestroyedActor);
+	if (DestroyedAgent)
 	{
-		HitPos = Result.ImpactPoint;
-		return FInputRayHit(Result.Distance);
+		Properties->AgentsInWorld.Remove(DestroyedAgent);
 	}
-	return FInputRayHit();
-}
-
-
-void UCrowdFlowAgentsTool::UpdatePosition(const FRay& WorldRay)
-{
-	//FInputRayHit HitResult = FindRayHit(WorldRay, (bMoveSecondPoint) ? Properties->EndPoint : Properties->StartPoint);
-	//if (HitResult.bHit)
-	//{
-	//	UpdateDistance();
-	//}
-}
-
-
-void UCrowdFlowAgentsTool::UpdateDistance()
-{
-	//Properties->Distance = FVector::Distance(Properties->StartPoint, Properties->EndPoint);
-}
-
-
-void UCrowdFlowAgentsTool::OnPropertyModified(UObject* PropertySet, FProperty* Property)
-{
-	// if the user updated any of the property fields, update the distance
-	UpdateDistance();
 }
 
 FInputRayHit UCrowdFlowAgentsTool::IsHitByClick(const FInputDeviceRay& ClickPos)
 {
+	if (!Properties->PlaceAgentOnClick)
+	{
+		return FInputRayHit();
+	}
+
 	FHitResult Hit;
 	float Range = 10000.f;
 	FVector Origin = ClickPos.WorldRay.Origin;
@@ -188,34 +133,43 @@ FInputRayHit UCrowdFlowAgentsTool::IsHitByClick(const FInputDeviceRay& ClickPos)
 
 		}
 
-		//ACrowdFlowAgentFTC* FTCAgent = NewObject<ACrowdFlowAgentFTC>();
-		//FTCAgent->SetActorLocation(Hit.Location);
-
-		TargetWorld->SpawnActor(FTCClass, &Hit.Location, &FRotator::ZeroRotator, FActorSpawnParameters());
-
-		//EditorEngine->AddActor()
+		AActor* SpawnedActor = nullptr;
+		FVector Location = Hit.Location;
+		Location.Z = Location.Z + (ACrowdFlowAgent::GetSphereRadius() / 2);
+		switch (Properties->AgentBehaviour)
+		{
+			case EAgentBehaviour::FollowTheCrowd:
+			{
+				// Spawn actor with FollowTheCrowd behavior
+				SpawnedActor = GetWorld()->SpawnActor(ExitSignClass, &Location, &FRotator::ZeroRotator, FActorSpawnParameters());
+				break;
+			}
+			case EAgentBehaviour::AvoidTheCrowd:
+			{
+				// Spawn actor with AvoidTheCrowd behavior
+				SpawnedActor = GetWorld()->SpawnActor(ExitStaircaseClass, &Location, &FRotator::ZeroRotator, FActorSpawnParameters());
+				break;
+			}
+			case EAgentBehaviour::AvoidUnknownExits:
+			{
+				// Spawn actor with AvoidUnknownExits behavior
+				SpawnedActor = GetWorld()->SpawnActor(AUEClass, &Location, &FRotator::ZeroRotator, FActorSpawnParameters());
+				break;
+			}
+			default:
+			{
+				// Handle default case
+				break;
+			}
+		}
+		if (SpawnedActor)
+		{
+			SpawnedActor->OnDestroyed.AddUniqueDynamic(this, &UCrowdFlowAgentsTool::OnActorRemovedFromWorld);
+			Properties->AgentsInWorld.AddUnique(Cast<ACrowdFlowAgent>(SpawnedActor));
+		}
 
 	}
-	DrawDebugLine(GetWorld(), Origin, Endpoint, FColor::Red, true);
-
 	return FInputRayHit();
 }
-
-void UCrowdFlowAgentsTool::OnClicked(const FInputDeviceRay& ClickPos)
-{
-}
-
-
-void UCrowdFlowAgentsTool::Render(IToolsContextRenderAPI* RenderAPI)
-{
-	//FPrimitiveDrawInterface* PDI = RenderAPI->GetPrimitiveDrawInterface();
-	//// draw a thin line that shows through objects
-	//PDI->DrawLine(Properties->StartPoint, Properties->EndPoint,
-	//	FColor(240, 16, 16), SDPG_Foreground, 2.0f, 0.0f, true);
-	//// draw a thicker line that is depth-tested
-	//PDI->DrawLine(Properties->StartPoint, Properties->EndPoint,
-	//	FColor(240, 16, 16), SDPG_World, 4.0f, 0.0f, true);
-}
-
-
 #undef LOCTEXT_NAMESPACE
+
