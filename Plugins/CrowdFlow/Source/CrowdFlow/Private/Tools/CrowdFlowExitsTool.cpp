@@ -114,14 +114,16 @@ void UCrowdFlowExitsTool::Setup()
 
 	TArray<AActor*> FinalDestinations;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACrowdFlowFinalDestination::StaticClass(), FinalDestinations);
-
-	ACrowdFlowFinalDestination* FinalDestination = Cast<ACrowdFlowFinalDestination>(FinalDestinations[0]);
-
-	if (FinalDestination)
+	if (!FinalDestinations.IsEmpty())
 	{
-		FinalDestination->OnDestroyed.AddUniqueDynamic(this, &UCrowdFlowExitsTool::OnFinalDestinationRemovedFromWorld);
-		Properties->FinalDestination = FinalDestination;
+		ACrowdFlowFinalDestination* FinalDestination = Cast<ACrowdFlowFinalDestination>(FinalDestinations[0]);
+		if (FinalDestination)
+		{
+			FinalDestination->OnDestroyed.AddUniqueDynamic(this, &UCrowdFlowExitsTool::OnFinalDestinationRemovedFromWorld);
+			Properties->FinalDestination = FinalDestination;
+		}
 	}
+
 	
 }
 

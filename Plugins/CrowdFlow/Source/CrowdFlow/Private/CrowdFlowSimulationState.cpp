@@ -49,3 +49,9 @@ FTimeHMS ACrowdFlowSimulationState::GetTimeInHMS()
     return TimeHMS;
 }
 
+void ACrowdFlowSimulationState::SubmitAgentData(const FAgentData& AgentData)
+{
+    AgentDataArray.Add(AgentData);
+
+}
+

@@ -26,7 +26,8 @@ ACrowdFlowAgent::ACrowdFlowAgent()
 	SphereComponent->SetStaticMesh(SphereMesh);
 	SphereComponent->GetStaticMesh()->SetExtendedBounds(FBoxSphereBounds(FVector::ZeroVector, FVector(SphereRadius), SphereRadius));
 
-		
+	
+	AgentData.AgentName = GetActorNameOrLabel();
 	// attach spherecomponent to root
 }
 
@@ -58,6 +59,11 @@ void ACrowdFlowAgent::StartSimulating()
 	}
 
 	NearestExitLocation = GetNearestExitLocation();
+
+	if (ACrowdFlowSimulationState* SimState = Cast<ACrowdFlowSimulationState>(GetWorld()->GetGameState()))
+	{
+		AgentData.StartTime = SimState->GetTimeInHMS();
+	}
 
 
 	BeginLookingForDirectMoveToFinalDestination();
@@ -99,7 +105,7 @@ void ACrowdFlowAgent::AttemptDirectMoveToFinalDestination()
 {
 	if (IsFinalDestinationVisible() && IsExitOnSameFloor(FinalDestination))
 	{
-		FoundDirectMoveToExit = true;
+		GetWorld()->GetTimerManager().ClearTimer(TH_DirectMove);
 
 		NextMove = FMove();
 
@@ -109,6 +115,8 @@ void ACrowdFlowAgent::AttemptDirectMoveToFinalDestination()
 
 		ClearMoveQueue();
 		ExecuteNextMove();
+
+		FoundDirectMoveToExit = true;
 	}
 	else
 	{
@@ -321,6 +329,17 @@ void ACrowdFlowAgent::MoveTillUnitAmount(FVector Direction)
 		{
 			CalculateNextMove();
 			ExecuteNextMove();
+		}
+		
+		if (FoundDirectMoveToExit)
+		{
+			if (ACrowdFlowSimulationState* SimState = Cast<ACrowdFlowSimulationState>(GetWorld()->GetGameState()))
+			{
+				AgentData.EndTime = SimState->GetTimeInHMS();
+				AgentData.Duration = AgentData.GetEvacuationDuration();
+				Destroy();
+			}
+
 		}
 
 	}

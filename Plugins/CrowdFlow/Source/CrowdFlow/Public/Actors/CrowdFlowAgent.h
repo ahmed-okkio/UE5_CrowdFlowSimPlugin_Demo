@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "CrowdFlowSimulationState.h"
 #include "CrowdFlowAgent.generated.h"
 
 class ACrowdFlowExitSign;
@@ -42,6 +43,8 @@ enum class EAgentBehaviour : uint8
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FMovementFinished);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FMovementBlocked);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FTelemetryTimer);
+
 
 
 UCLASS()
@@ -94,6 +97,9 @@ protected:
 	FMovementFinished MovementFinishedDelegate;
 	UPROPERTY()
 	FMovementBlocked MovementBlockedDelegate;
+	UPROPERTY()
+	FTelemetryTimer OnTimerEnded;
+
 
 	EMovementModes MovementMode = EMovementModes::MM_Direct;
 	
@@ -119,7 +125,9 @@ protected:
 	FTimerHandle TH_DirectMove;
 
 	ACrowdFlowGameMode* GameMode = nullptr;
-	
+
+	FAgentData AgentData;
+
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
@@ -209,7 +217,6 @@ public:
 
 	FVector NearestExitLocation;
 
-	
 	int32 CurrentUnitsLeft = 0;
 
 	UFUNCTION(BlueprintCallable, Category = "Movement")

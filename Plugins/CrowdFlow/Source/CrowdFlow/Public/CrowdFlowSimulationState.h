@@ -6,12 +6,23 @@
 #include "GameFramework/GameStateBase.h"
 #include "CrowdFlowSimulationState.generated.h"
 
-
-
 USTRUCT(BlueprintType)
 struct FTimeHMS
 {
 	GENERATED_BODY()
+
+	FTimeHMS()
+	{
+		Hours = 0;
+		Minutes = 0;
+		Seconds = 0;
+	}
+	FTimeHMS(int32 InHours, int32 InMinutes, int32 InSeconds)
+	{
+		Hours = InHours;
+		Minutes = InMinutes;
+		Seconds = InSeconds;
+	}
 
 	UPROPERTY(BlueprintReadWrite, Category = "Time")
 	int32 Hours;
@@ -22,6 +33,34 @@ struct FTimeHMS
 	UPROPERTY(BlueprintReadWrite, Category = "Time")
 	int32 Seconds;
 };
+
+USTRUCT(BlueprintType)
+struct FAgentData
+{
+	GENERATED_BODY()
+
+	FString AgentName;
+
+	FTimeHMS StartTime;
+
+	FTimeHMS EndTime;
+
+	FTimeHMS Duration;
+
+	FTimeHMS GetEvacuationDuration()
+	{
+		int32 DurationInSeconds = ((EndTime.Hours - StartTime.Hours) * 3600) +
+			((EndTime.Minutes - StartTime.Minutes) * 60) +
+			(EndTime.Seconds - StartTime.Seconds);
+
+		int32 DurationInHours = DurationInSeconds / 3600;
+		int32 DurationInMinutes = (DurationInSeconds % 3600) / 60;
+		int32 DurationInSecondsRemaining = (DurationInSeconds % 3600) % 60;
+
+		return FTimeHMS(DurationInHours, DurationInMinutes, DurationInSecondsRemaining);
+	}
+};
+
 /**
  * 
  */
@@ -33,7 +72,10 @@ class CROWDFLOW_API ACrowdFlowSimulationState : public AGameStateBase
 
 protected:
 	float TimerInSeconds = 0.f;
+
 	FTimerHandle TimerHandle;
+
+	TArray<FAgentData> AgentDataArray;
 
 	virtual void HandleBeginPlay() override;
 
@@ -51,6 +93,8 @@ public:
 	// Function to convert seconds to hours, minutes, and seconds
     UFUNCTION(BlueprintCallable, Category = "Time")
     FTimeHMS GetTimeInHMS();
+
+	void SubmitAgentData(const FAgentData& AgentData);
 
 	
 };
