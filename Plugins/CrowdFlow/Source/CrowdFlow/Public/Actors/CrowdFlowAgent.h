@@ -8,7 +8,7 @@
 
 class ACrowdFlowExitSign;
 class ACrowdFlowExitStaircase;
-
+class ACrowdFlowGameMode;
 
 USTRUCT()
 struct FMove
@@ -117,6 +117,8 @@ protected:
 	FTimerHandle TH_Movement;
 	
 	FTimerHandle TH_DirectMove;
+
+	ACrowdFlowGameMode* GameMode = nullptr;
 	
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -186,6 +188,10 @@ protected:
 
 	UFUNCTION()
 	void OnFoundLeftMostWall();
+
+	UFUNCTION()
+	void StartSimulating();
+
 
 public:	
 	static float GetSphereRadius();

@@ -8,6 +8,8 @@
 #include "Actors/CrowdFlowFinalDestination.h"
 #include "Actors/CrowdFlowExitStaircase.h"
 #include "Kismet/GameplayStatics.h"
+#include "CrowdFlowSimulationState.h"
+#include "GameMode/CrowdFlowGameMode.h"
 
 float ACrowdFlowAgent::SphereRadius = 100.f;
 
@@ -32,10 +34,24 @@ ACrowdFlowAgent::ACrowdFlowAgent()
 void ACrowdFlowAgent::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	GameMode = Cast<ACrowdFlowGameMode>(GetWorld()->GetAuthGameMode());
+	if (GameMode)
+	{
+		GameMode->OnSimulationStart.AddDynamic(this, &ACrowdFlowAgent::StartSimulating);
+	}
+}
+
+void ACrowdFlowAgent::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+	//SphereComponent->GetStaticMesh()->SetExtendedBounds(FBoxSphereBounds(FVector::ZeroVector, FVector(SphereRadius), SphereRadius));
+}
+
+void ACrowdFlowAgent::StartSimulating()
+{
 	TArray<AActor*> AllActors;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACrowdFlowFinalDestination::StaticClass(), AllActors);
-	
+
 	if (AllActors[0])
 	{
 		FinalDestination = AllActors[0]->GetActorLocation();
@@ -43,16 +59,10 @@ void ACrowdFlowAgent::BeginPlay()
 
 	NearestExitLocation = GetNearestExitLocation();
 
-	
+
 	BeginLookingForDirectMoveToFinalDestination();
 	CalculateNextMove();
 	ExecuteNextMove();
-}
-
-void ACrowdFlowAgent::PostInitializeComponents()
-{
-	Super::PostInitializeComponents();
-	//SphereComponent->GetStaticMesh()->SetExtendedBounds(FBoxSphereBounds(FVector::ZeroVector, FVector(SphereRadius), SphereRadius));
 }
 
 bool ACrowdFlowAgent::IsGrounded()
@@ -282,6 +292,14 @@ void ACrowdFlowAgent::MoveToExit(ACrowdFlowExitSign* ExitSign)
 
 void ACrowdFlowAgent::MoveTillUnitAmount(FVector Direction)
 {
+	if (GameMode)
+	{
+		if (!GameMode->IsSimulationStarted())
+		{
+			return;
+		}
+	}
+
 	if (CurrentUnitsLeft > 0)
 	{
 		SetActorRotation(Direction.Rotation());
@@ -310,6 +328,14 @@ void ACrowdFlowAgent::MoveTillUnitAmount(FVector Direction)
 
 void ACrowdFlowAgent::MoveTillBlocked(FVector Direction)
 {
+	if (GameMode)
+	{
+		if (!GameMode->IsSimulationStarted())
+		{
+			return;
+		}
+	}
+
 	if (CurrentUnitsLeft > 0)
 	{
 		SetActorRotation(Direction.Rotation());
