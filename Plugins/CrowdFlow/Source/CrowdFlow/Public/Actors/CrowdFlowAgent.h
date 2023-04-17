@@ -26,26 +26,9 @@ struct FMove
 	}
 };
 
-UENUM()
-enum class EMovementModes : uint8
-{
-	MM_Direct UMETA(DisplayName = "Direct"),
-	MM_Exit UMETA(DisplayName = "Exit"),
-};	
-
-UENUM(BlueprintType)
-enum class EAgentBehaviour : uint8
-{
-	FollowTheCrowd UMETA(DisplayName = "Follow The Crowd"),
-	AvoidTheCrowd UMETA(DisplayName = "Avoid The Crowd"),
-	AvoidUnknownExits UMETA(DisplayName = "Avoid Unkown Exits")
-};
-
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FMovementFinished);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FMovementBlocked);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FTelemetryTimer);
-
-
 
 UCLASS()
 class CROWDFLOW_API ACrowdFlowAgent : public AActor
@@ -57,15 +40,10 @@ public:
 	ACrowdFlowAgent();
 
 protected:
-
-	UPROPERTY(EditDefaultsOnly)
-	EAgentBehaviour AgentBehaviour = EAgentBehaviour::FollowTheCrowd;
+	static float SphereRadius;
 
 	UPROPERTY(EditDefaultsOnly)
 	float SameFloorHeightMargin = 200.f;
-
-	UPROPERTY(EditDefaultsOnly)
-	float MaxStepHeight = 25.f;
 
 	UPROPERTY(EditInstanceOnly)
 	float UnitsPerMove = 100.0f;
@@ -85,58 +63,41 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	float UnitsToMovePastExit = 500.0f;
 
-	static float SphereRadius;
-
 	float PersonalSpace = 50.0f;
-
-	bool LookingForExit = false;
 
 	bool FoundDirectMoveToExit = false;
 
+	float TotalUnits = 0.0f;
+
+
+	// Event delegates
 	UPROPERTY()	
 	FMovementFinished MovementFinishedDelegate;
 	UPROPERTY()
 	FMovementBlocked MovementBlockedDelegate;
 	UPROPERTY()
 	FTelemetryTimer OnTimerEnded;
-
-
-	EMovementModes MovementMode = EMovementModes::MM_Direct;
 	
-	FMove NextMove;
-
-	// Move system overhaul
-	//FMove* ActiveMacroMove = nullptr;
-
-	//TQueue<FMove*> MacroMoveQ;
-	//TQueue<FMove*> MicroMoveQ;
-
-	//TQueue<FMove*> MoveExecutionQ;
-
-	
-	ACrowdFlowExitSign* ExitSignBeingFollowed = nullptr;
-
-	ACrowdFlowExitSign* LastFollowedExitSign = nullptr;
-
-	ACrowdFlowExitStaircase* CurrentStaircase = nullptr;
-	
-	FTimerHandle TH_Movement;
-	
-	FTimerHandle TH_DirectMove;
-
 	ACrowdFlowGameMode* GameMode = nullptr;
 
+	ACrowdFlowExitSign* ExitSignBeingFollowed = nullptr;
+	ACrowdFlowExitSign* LastFollowedExitSign = nullptr;
+	ACrowdFlowExitStaircase* CurrentStaircase = nullptr;
+
+	
+	FTimerHandle TH_Movement;
+	FTimerHandle TH_DirectMove;
+
 	FAgentData AgentData;
+
+	FMove NextMove;
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	virtual void PostInitializeComponents() override;
-
+	FVector GetNearestExitLocation();
 
 	bool IsGrounded();
-
-	void LookForPathAround();
 
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 	void MoveTowardsDirection(FVector Direction, int32 Units);
@@ -155,11 +116,7 @@ protected:
 	
 	bool IsBestMove(FMove NewMove) const;
 	
-	void CalculateNextMicroMove();
-
 	void ExecuteNextMove();
-
-	void ExecuteActiveMove();
 
 	void ClearMoveQueue();
 
@@ -175,8 +132,8 @@ protected:
 
 	void FollowLeftMostWall();
 
-	FVector GetNearestExitLocation();
-
+	UFUNCTION()
+	void StartSimulating();
 
 	UFUNCTION()
 	void MoveTillUnitAmount(FVector Direction);
@@ -193,20 +150,10 @@ protected:
 	UFUNCTION()
 	void OnFoundRightMostWall();
 
-
 	UFUNCTION()
 	void OnFoundLeftMostWall();
 
-	UFUNCTION()
-	void StartSimulating();
-
-
 public:	
-	static float GetSphereRadius();
-
-	UFUNCTION(BlueprintCallable, Category = "Movement")
-	int32 GetCurrentUnitsLeft();
-	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
@@ -227,4 +174,9 @@ public:
 	void MoveToExit(ACrowdFlowExitSign* ExitSign);
 
 	void MoveDownStair(ACrowdFlowExitStaircase* Staircase, bool RightStaircase);
+
+	static float GetSphereRadius();
+
+	UFUNCTION(BlueprintCallable, Category = "Movement")
+	int32 GetCurrentUnitsLeft();
 };

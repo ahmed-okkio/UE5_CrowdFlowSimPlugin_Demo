@@ -5,9 +5,17 @@
 #include "CoreMinimal.h"
 #include "InteractiveToolBuilder.h"
 #include "BaseTools/ClickDragTool.h"
-#include "Actors/CrowdFlowAgent.h"
 #include "CrowdFlowAgentsTool.generated.h"
 
+
+
+UENUM(BlueprintType)
+enum class EAgentBehaviour : uint8
+{
+	FollowTheCrowd UMETA(DisplayName = "Follow The Crowd"),
+	AvoidTheCrowd UMETA(DisplayName = "Avoid The Crowd"),
+	AvoidUnknownExits UMETA(DisplayName = "Avoid Unkown Exits")
+};
 /**
  * 
  */
@@ -21,6 +29,7 @@ public:
 	virtual UInteractiveTool* BuildTool(const FToolBuilderState& SceneState) const override;
 };
 
+class ACrowdFlowAgent;
 
 /**
  * Property set for the UCrowdFlowInteractiveTool
@@ -73,11 +82,9 @@ public:
 protected:
 	/** Properties of the tool are stored here */
 	UPROPERTY()
-		TObjectPtr<UCrowdFlowAgentsToolProperties> Properties;
-
+	TObjectPtr<UCrowdFlowAgentsToolProperties> Properties;
 
 protected:
-
 	UClass* ExitSignClass = nullptr;
 	UClass* ExitStaircaseClass = nullptr;
 	UClass* AUEClass = nullptr;

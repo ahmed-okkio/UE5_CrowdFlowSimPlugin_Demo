@@ -7,7 +7,7 @@
 
 void ACrowdFlowAgentATC::SeeExitSign(ACrowdFlowExitSign* ExitSign)
 {
-	if (!ExitSign)
+	if (!ExitSign || FoundDirectMoveToExit)
 	{
 		return;
 	}

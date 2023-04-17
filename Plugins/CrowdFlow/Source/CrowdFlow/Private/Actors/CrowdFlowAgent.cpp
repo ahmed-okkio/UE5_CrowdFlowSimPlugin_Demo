@@ -28,10 +28,8 @@ ACrowdFlowAgent::ACrowdFlowAgent()
 
 	
 	AgentData.AgentName = GetActorNameOrLabel();
-	// attach spherecomponent to root
 }
 
-// Called when the game starts or when spawned
 void ACrowdFlowAgent::BeginPlay()
 {
 	Super::BeginPlay();
@@ -40,12 +38,6 @@ void ACrowdFlowAgent::BeginPlay()
 	{
 		GameMode->OnSimulationStart.AddDynamic(this, &ACrowdFlowAgent::StartSimulating);
 	}
-}
-
-void ACrowdFlowAgent::PostInitializeComponents()
-{
-	Super::PostInitializeComponents();
-	//SphereComponent->GetStaticMesh()->SetExtendedBounds(FBoxSphereBounds(FVector::ZeroVector, FVector(SphereRadius), SphereRadius));
 }
 
 void ACrowdFlowAgent::StartSimulating()
@@ -78,11 +70,6 @@ bool ACrowdFlowAgent::IsGrounded()
 	FVector EndLocation = CurrentLocation + FVector(0,0,-1) * (SphereRadius+5.f);
 	GetWorld()->LineTraceSingleByChannel(Hit, CurrentLocation, EndLocation, ECollisionChannel::ECC_PhysicsBody);
 	return Hit.bBlockingHit;
-}
-
-void ACrowdFlowAgent::LookForPathAround()
-{
-
 }
 
 bool ACrowdFlowAgent::IsFinalDestinationVisible() const
@@ -164,7 +151,7 @@ bool ACrowdFlowAgent::IsBestMove(FMove NewMove) const
 	
 	FHitResult Hit;
 	GetWorld()->LineTraceSingleByChannel(Hit, CurrentLocation, NewMoveLocation, ECollisionChannel::ECC_PhysicsBody);
-	//DrawDebugLine(GetWorld(), CurrentLocation, NewMoveLocation, Hit.bBlockingHit ? FColor::Blue : FColor::Red, false, 5.0f, -1, 10.0f);
+	DrawDebugLine(GetWorld(), CurrentLocation, NewMoveLocation, Hit.bBlockingHit ? FColor::Blue : FColor::Red, false);
 
 	if (Hit.bBlockingHit)
 	{
@@ -173,7 +160,7 @@ bool ACrowdFlowAgent::IsBestMove(FMove NewMove) const
 
 	if (NextMove.Units == 0)
 	{
-		//DrawDebugLine(GetWorld(), CurrentLocation, NewMoveLocation, FColor::Purple, false, 5.0f, -1, 10.0f);
+		DrawDebugLine(GetWorld(), CurrentLocation, NewMoveLocation, FColor::Purple, false);
 		return true;
 
 	}
@@ -183,33 +170,9 @@ bool ACrowdFlowAgent::IsBestMove(FMove NewMove) const
 		return false;
 	}
 
-	//DrawDebugLine(GetWorld(), CurrentLocation, NewMoveLocation, FColor::Green, false, 5.0f, -2, 10.0f);
+	DrawDebugLine(GetWorld(), CurrentLocation, NewMoveLocation, FColor::Green, false);
 
 	return true;
-}
-
-void ACrowdFlowAgent::CalculateNextMicroMove()
-{
-	// Move system overhall
-	/*if (!ActiveMacroMove)
-	{
-		return;
-	}
-
-	FVector Heuristic = ActiveMacroMove->Direction;
-	float DegreesBetweenMove = 360 / TurnSmoothness;
-	for (int32 i = 0; i < 360; i += DegreesBetweenMove)
-	{
-		FMove NewMove;
-		FVector NewDirection = ForwardVector.RotateAngleAxis(i, FVector(0, 0, 1));
-		NewMove.Direction = NewDirection;
-		NewMove.Units = UnitsPerMove;
-
-		if (IsBestMove(NewMove))
-		{
-			NextMove = NewMove;
-		}
-	}*/
 }
 
 void ACrowdFlowAgent::ExecuteNextMove()
@@ -308,6 +271,22 @@ void ACrowdFlowAgent::MoveTillUnitAmount(FVector Direction)
 		}
 	}
 
+	FVector NewMoveLocation = GetActorLocation() + Direction * (PersonalSpace + SphereRadius);
+
+	FHitResult Hit;
+	GetWorld()->LineTraceSingleByChannel(Hit, GetActorLocation(), NewMoveLocation, ECollisionChannel::ECC_GameTraceChannel1);
+	if (Hit.bBlockingHit)
+	{
+		if (ACrowdFlowAgent* HitActor = Cast<ACrowdFlowAgent>(Hit.GetActor()))
+		{
+			DrawDebugLine(GetWorld(), GetActorLocation(), Hit.Location, FColor::Red, false);
+			SphereComponent->SetAllPhysicsAngularVelocityInDegrees(FVector(0, 0, 0));
+
+			// Possibly add timer to attempt to go around if agent doesn't move out of the way
+			return;
+		}
+	}
+
 	if (CurrentUnitsLeft > 0)
 	{
 		SetActorRotation(Direction.Rotation());
@@ -316,6 +295,7 @@ void ACrowdFlowAgent::MoveTillUnitAmount(FVector Direction)
 		T.Z = GetVelocity().Z;
 		SphereComponent->SetAllPhysicsLinearVelocity(T, false);
 		CurrentUnitsLeft--;
+		TotalUnits++;
 	}
 	else
 	{
@@ -337,6 +317,9 @@ void ACrowdFlowAgent::MoveTillUnitAmount(FVector Direction)
 			{
 				AgentData.EndTime = SimState->GetTimeInHMS();
 				AgentData.Duration = AgentData.GetEvacuationDuration();
+				AgentData.UnitsTraveled = TotalUnits;
+				AgentData.AverageUnitsPerSecond = TotalUnits / AgentData.GetDurationInSeconds();
+				SimState->SubmitAgentData(AgentData);
 				Destroy();
 			}
 
@@ -363,7 +346,7 @@ void ACrowdFlowAgent::MoveTillBlocked(FVector Direction)
 		T.Z = GetVelocity().Z;
 		SphereComponent->SetAllPhysicsLinearVelocity(T, false);
 		CurrentUnitsLeft--;
-
+		TotalUnits++;
 	}
 	else
 	{
@@ -378,7 +361,7 @@ void ACrowdFlowAgent::MoveTillBlocked(FVector Direction)
 				return;
 			}
 
-			DrawDebugLine(GetWorld(), GetActorLocation(), NewMoveLocation, FColor::Red,false,1);
+			DrawDebugLine(GetWorld(), GetActorLocation(), NewMoveLocation, FColor::Red,false);
 
 			GetWorld()->GetTimerManager().ClearTimer(TH_Movement);
 			MovementBlockedDelegate.Broadcast();
@@ -402,9 +385,6 @@ void ACrowdFlowAgent::OnReachedExit()
 		FText();
 		return;
 	}
-	//LastFollowedExitSign = ExitSignBeingFollowed;
-
-	//FVector Destination = GetActorLocation() + (-ExitSignBeingFollowed->GetActorForwardVector() * UnitsToMovePastExit);
 
 	FVector Direction = -ExitSignBeingFollowed->GetActorForwardVector();
 	CurrentUnitsLeft = UnitsToMovePastExit;
@@ -429,18 +409,11 @@ void ACrowdFlowAgent::OnLeftExit()
 void ACrowdFlowAgent::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	//MoveTowardsDirection(SphereComponent->GetForwardVector(), 5);
+
 	if (FoundDirectMoveToExit)
 	{
 		DrawDebugLine(GetWorld(), GetActorLocation(), FinalDestination, FColor::Red, false);
 	}
-	
-	// Move system overhaul
-	/*if (ActiveMacroMove == nullptr) 
-	{
-		MacroMoveQ.Dequeue(ActiveMacroMove OUT);
-	}*/
-
 }
 
 void ACrowdFlowAgent::MoveDownStair(ACrowdFlowExitStaircase* Staircase, bool RightStaircase)
@@ -480,15 +453,11 @@ void ACrowdFlowAgent::FindRightMostWall()
 	MovementBlockedDelegate.AddDynamic(this, &ACrowdFlowAgent::OnFoundRightMostWall);
 }
 
-void ACrowdFlowAgent::ExecuteActiveMove()
-{
-
-}
-
 void ACrowdFlowAgent::FollowRightMostWall()
 {
 	// Move along right wall
 	FVector DirectionToStair = GetActorForwardVector().RotateAngleAxis(-90.f, FVector(0, 0, 1));
+
 	FTimerDelegate Delegate;
 	Delegate.BindUFunction(this, "MoveTillBlocked", DirectionToStair);
 	GetWorld()->GetTimerManager().SetTimer(TH_Movement, Delegate, Speed, true);
@@ -526,7 +495,7 @@ void ACrowdFlowAgent::OnFoundRightMostWall()
 
 void ACrowdFlowAgent::SeeExitSign(ACrowdFlowExitSign* ExitSign)
 {
-	if (!ExitSign)
+	if (!ExitSign || FoundDirectMoveToExit)
 	{
 		return;
 	}
@@ -587,5 +556,3 @@ int32 ACrowdFlowAgent::GetDistanceToFinalDestination()
 {
 	return FVector::Distance(GetActorLocation(), FinalDestination);
 }
-
-

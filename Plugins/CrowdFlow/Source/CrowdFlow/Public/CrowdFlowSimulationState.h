@@ -47,6 +47,10 @@ struct FAgentData
 
 	FTimeHMS Duration;
 
+	int32 UnitsTraveled = 0;
+
+	float AverageUnitsPerSecond;
+
 	FTimeHMS GetEvacuationDuration()
 	{
 		int32 DurationInSeconds = ((EndTime.Hours - StartTime.Hours) * 3600) +
@@ -58,6 +62,12 @@ struct FAgentData
 		int32 DurationInSecondsRemaining = (DurationInSeconds % 3600) % 60;
 
 		return FTimeHMS(DurationInHours, DurationInMinutes, DurationInSecondsRemaining);
+	}
+
+	float GetDurationInSeconds()
+	{
+		int32 DurationInSeconds = Duration.Hours * 3600 + Duration.Minutes * 60 + Duration.Seconds;
+		return static_cast<float>(DurationInSeconds);
 	}
 };
 
@@ -94,7 +104,7 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Time")
     FTimeHMS GetTimeInHMS();
 
-	void SubmitAgentData(const FAgentData& AgentData);
+	void SubmitAgentData(FAgentData AgentData);
 
 	
 };

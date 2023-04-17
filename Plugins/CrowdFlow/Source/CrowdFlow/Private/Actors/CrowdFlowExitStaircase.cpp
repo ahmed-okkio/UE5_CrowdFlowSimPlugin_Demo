@@ -66,8 +66,6 @@ void ACrowdFlowExitStaircase::Tick(float DeltaTime)
 
 		FVector Center = SpriteComponent->GetComponentLocation();
 
-		//Center.Z += BoundingBox.Z;
-
 		DrawDebugBox(GetWorld(), Center, BoundingBox, GetActorRotation().Quaternion(), FColor::Green, false, 0.f, DepthPriority, 5);
 	}
 

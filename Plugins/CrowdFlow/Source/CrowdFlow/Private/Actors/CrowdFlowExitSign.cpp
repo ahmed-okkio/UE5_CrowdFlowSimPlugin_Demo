@@ -89,11 +89,10 @@ void ACrowdFlowExitSign::TraceForAgents()
 
 		HitObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_GameTraceChannel1));
 		bool bHit = GetWorld()->SweepMultiByChannel(HitResults, Center, Center, Rotation.Quaternion(), ECollisionChannel::ECC_GameTraceChannel1, FCollisionShape::MakeBox(DetectionRange), FCollisionQueryParams());
-		//FVector Center = (GetActorLocation() + Offset) + GetActorForwardVector() * DetectionRange.X;
 
 		if (!bHit)
 		{
-			DrawDebugBox(GetWorld(), Center, DetectionRange, GetActorRotation().Quaternion(), FColor::Blue, false, TraceRate, 0, 5);
+			DrawDebugBox(GetWorld(), Center, DetectionRange, GetActorRotation().Quaternion(), KnownExit ? FColor::Emerald : FColor::Orange, false, TraceRate);
 			return;
 		}
 
@@ -105,8 +104,7 @@ void ACrowdFlowExitSign::TraceForAgents()
 				return;
 			}
 
-			//FVector Center = (GetActorLocation() + Offset) + GetActorForwardVector() * DetectionRange.X;
-			DrawDebugBox(GetWorld(), Center, DetectionRange, GetActorRotation().Quaternion(), KnownExit ? FColor::Emerald : FColor::Orange, false, TraceRate, 0, 5);
+			DrawDebugBox(GetWorld(), Center, DetectionRange, GetActorRotation().Quaternion(), KnownExit ? FColor::Emerald : FColor::Orange, false, TraceRate, 0 , 2);
 
 			Agent->SeeExitSign(this);
 		}
