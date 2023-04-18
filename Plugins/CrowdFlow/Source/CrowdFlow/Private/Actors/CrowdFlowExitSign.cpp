@@ -100,13 +100,24 @@ void ACrowdFlowExitSign::TraceForAgents()
 		{
 			ACrowdFlowAgent* Agent = Cast<ACrowdFlowAgent>(HitResult.GetActor());
 			if (!Agent)
+
 			{
 				return;
 			}
 
 			DrawDebugBox(GetWorld(), Center, DetectionRange, GetActorRotation().Quaternion(), KnownExit ? FColor::Emerald : FColor::Orange, false, TraceRate, 0 , 2);
+			FString Name = GetActorNameOrLabel();
+			if(Name == "BP_ExitSign5")
+			{
+				FName t = FName();
+				Name = "";
+				Agent->SeeExitSign(this);
 
-			Agent->SeeExitSign(this);
+			}
+			else
+			{
+				Agent->SeeExitSign(this);
+			}
 		}
 }
 

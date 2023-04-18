@@ -223,6 +223,7 @@ void ACrowdFlowAgent::MoveToLocation(const FVector Destination)
 
 void ACrowdFlowAgent::MoveToExit(ACrowdFlowExitSign* ExitSign)
 {
+	CurrentStaircase = nullptr;
 	// Don't move to this sign if we have already moved to it before.
 	if (ExitSign == ExitSignBeingFollowed || ExitSign == LastFollowedExitSign)
 	{
@@ -270,6 +271,10 @@ void ACrowdFlowAgent::MoveTillUnitAmount(FVector Direction)
 			return;
 		}
 	}
+	if (GoingAround)
+	{
+		return;
+	}
 
 	FVector NewMoveLocation = GetActorLocation() + Direction * (PersonalSpace + SphereRadius);
 
@@ -282,10 +287,27 @@ void ACrowdFlowAgent::MoveTillUnitAmount(FVector Direction)
 			DrawDebugLine(GetWorld(), GetActorLocation(), Hit.Location, FColor::Red, false);
 			SphereComponent->SetAllPhysicsAngularVelocityInDegrees(FVector(0, 0, 0));
 
+			if (HitActor->IsOnStairCase())
+			{
+				WaitingForStairCase = true;
+				return;
+			}
+
 			// Possibly add timer to attempt to go around if agent doesn't move out of the way
+			if (!GoingAround && !HitActor->IsWaitingForStairCase())
+			{
+				GoingAround = true;
+				FTimerDelegate Delegate;
+				Delegate.BindUFunction(this, "BeginGoAround", Direction);
+				GetWorld()->GetTimerManager().SetTimer(TH_GoAround, Delegate, 0.5, false);
+			}
+
 			return;
 		}
 	}
+
+	WaitingForStairCase = false;
+
 
 	if (CurrentUnitsLeft > 0)
 	{
@@ -338,6 +360,31 @@ void ACrowdFlowAgent::MoveTillBlocked(FVector Direction)
 		}
 	}
 
+	FVector NewMoveLocation = GetActorLocation() + Direction * (PersonalSpace + SphereRadius);
+
+	FHitResult Hit;
+	GetWorld()->LineTraceSingleByChannel(Hit, GetActorLocation(), NewMoveLocation, ECollisionChannel::ECC_GameTraceChannel1);
+	if (Hit.bBlockingHit)
+	{
+		if (ACrowdFlowAgent* HitActor = Cast<ACrowdFlowAgent>(Hit.GetActor()))
+		{
+			DrawDebugLine(GetWorld(), GetActorLocation(), Hit.Location, FColor::Red, false);
+			SphereComponent->SetAllPhysicsAngularVelocityInDegrees(FVector(0, 0, 0));
+
+			// Possibly add timer to attempt to go around if agent doesn't move out of the way
+			/*if (!GoingAround)
+			{
+				GoingAround = true;
+
+				FTimerDelegate Delegate;
+				Delegate.BindUFunction(this, "BeginGoAround", Direction);
+				GetWorld()->GetTimerManager().SetTimer(TH_GoAround, Delegate, 0.5, false);
+			}*/
+
+			return;
+		}
+	}
+
 	if (CurrentUnitsLeft > 0)
 	{
 		SetActorRotation(Direction.Rotation());
@@ -350,9 +397,9 @@ void ACrowdFlowAgent::MoveTillBlocked(FVector Direction)
 	}
 	else
 	{
-		FVector NewMoveLocation = GetActorLocation() + Direction * (PersonalSpace + SphereRadius);
+		NewMoveLocation = GetActorLocation() + Direction * (PersonalSpace + SphereRadius);
 
-		FHitResult Hit;
+		Hit;
 		GetWorld()->LineTraceSingleByChannel(Hit, GetActorLocation(), NewMoveLocation, ECollisionChannel::ECC_WorldStatic);
 		if (Hit.bBlockingHit)
 		{
@@ -463,6 +510,101 @@ void ACrowdFlowAgent::FollowRightMostWall()
 	GetWorld()->GetTimerManager().SetTimer(TH_Movement, Delegate, Speed, true);
 }
 
+void ACrowdFlowAgent::BeginGoAround(FVector Direction)
+{
+	// This is a prototype function therfore is very lengthyl and redundant
+	GetWorld()->GetTimerManager().ClearTimer(TH_GoAround);
+	FVector OriginalMoveDestination = GetActorLocation() + Direction * (PersonalSpace + SphereRadius);
+	FHitResult Hit;
+	GetWorld()->LineTraceSingleByChannel(Hit, GetActorLocation(), OriginalMoveDestination, ECollisionChannel::ECC_PhysicsBody);
+	if (!Hit.bBlockingHit)
+	{
+		GoingAround = false;
+		GetWorld()->GetTimerManager().ClearTimer(TH_GoAround);
+		return;
+	}
+	FVector SoftLeftDirection = Direction.RotateAngleAxis(-45, FVector(0, 0, 1));
+	FVector HardLeftDirection = Direction.RotateAngleAxis(-90, FVector(0, 0, 1));
+
+
+	FVector SoftLeftDestination = GetActorLocation() + SoftLeftDirection * (PersonalSpace + SphereRadius);
+	FVector HardLeftDestination = GetActorLocation() + HardLeftDirection * (PersonalSpace + SphereRadius);
+
+	GetWorld()->LineTraceSingleByChannel(Hit, GetActorLocation(), SoftLeftDestination, ECollisionChannel::ECC_PhysicsBody);
+	DrawDebugLine(GetWorld(), GetActorLocation(), SoftLeftDestination, FColor::Red, false);
+
+	if (!Hit.bBlockingHit)
+	{
+		GoAroundUnits = PersonalSpace;
+		FTimerDelegate Delegate;
+		Delegate.BindUFunction(this, "GoAround", SoftLeftDirection);
+		GetWorld()->GetTimerManager().SetTimer(TH_GoAround, Delegate, Speed, true);
+		return;
+	}
+
+	DrawDebugLine(GetWorld(), GetActorLocation(), HardLeftDestination, FColor::Red, false);
+	GetWorld()->LineTraceSingleByChannel(Hit, GetActorLocation(), HardLeftDestination, ECollisionChannel::ECC_PhysicsBody);
+	if (!Hit.bBlockingHit)
+	{
+		GoAroundUnits = PersonalSpace;
+		FTimerDelegate Delegate;
+		Delegate.BindUFunction(this, "GoAround", HardLeftDirection);
+		GetWorld()->GetTimerManager().SetTimer(TH_GoAround, Delegate, Speed, true);
+		return;
+	}
+
+	// Try right side
+	FVector SoftRightDirection = Direction.RotateAngleAxis(45, FVector(0, 0, 1));
+	FVector HardRightDirection = Direction.RotateAngleAxis(90, FVector(0, 0, 1));
+
+
+	FVector SoftRightDestination = GetActorLocation() + SoftRightDirection * (PersonalSpace + SphereRadius);
+	FVector HardRightDestination = GetActorLocation() + HardRightDirection * (PersonalSpace + SphereRadius);
+
+	DrawDebugLine(GetWorld(), GetActorLocation(), SoftRightDestination, FColor::Red, false);
+	GetWorld()->LineTraceSingleByChannel(Hit, GetActorLocation(), SoftRightDestination, ECollisionChannel::ECC_PhysicsBody);
+	if (!Hit.bBlockingHit)
+	{
+		GoAroundUnits = PersonalSpace;
+		FTimerDelegate Delegate;
+		Delegate.BindUFunction(this, "GoAround", SoftRightDirection);
+		GetWorld()->GetTimerManager().SetTimer(TH_GoAround, Delegate, Speed, true);
+		return;
+	}
+
+	DrawDebugLine(GetWorld(), GetActorLocation(), HardRightDestination, FColor::Red, false);
+	GetWorld()->LineTraceSingleByChannel(Hit, GetActorLocation(), HardRightDestination, ECollisionChannel::ECC_PhysicsBody);
+	if (!Hit.bBlockingHit)
+	{
+		GoAroundUnits = PersonalSpace;
+		FTimerDelegate Delegate;
+		Delegate.BindUFunction(this, "GoAround", HardRightDirection);
+		GetWorld()->GetTimerManager().SetTimer(TH_GoAround, Delegate, Speed, true);
+		return;
+	}
+	GoingAround = false;
+}
+
+void ACrowdFlowAgent::GoAround(FVector Direction)
+{
+	
+	if (GoAroundUnits > 0)
+	{
+		SetActorRotation(Direction.Rotation());
+		SetActorLocation(GetActorLocation() + (Direction * 1));
+		FVector T = FVector(0, 0, 0);
+		T.Z = GetVelocity().Z;
+		SphereComponent->SetAllPhysicsLinearVelocity(T, false);
+		GoAroundUnits--;
+		TotalUnits++;
+	}
+	else
+	{
+		GetWorld()->GetTimerManager().ClearTimer(TH_GoAround);
+		GoingAround = false;
+	}
+}
+
 void ACrowdFlowAgent::MoveDownLeftStair()
 {
 	FindLeftMostWall();
@@ -555,4 +697,19 @@ int32 ACrowdFlowAgent::GetCurrentUnitsLeft()
 int32 ACrowdFlowAgent::GetDistanceToFinalDestination()
 {
 	return FVector::Distance(GetActorLocation(), FinalDestination);
+}
+
+bool ACrowdFlowAgent::IsWaitingForStairCase() const
+{
+	return WaitingForStairCase;
+}
+
+bool ACrowdFlowAgent::IsOnStairCase() const
+{
+	if (CurrentStaircase)
+	{
+		return true;
+	}
+
+	return false;
 }

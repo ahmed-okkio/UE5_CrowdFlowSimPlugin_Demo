@@ -67,6 +67,10 @@ protected:
 
 	bool FoundDirectMoveToExit = false;
 
+	bool GoingAround = false;
+
+	bool WaitingForStairCase = false;
+
 	float TotalUnits = 0.0f;
 
 
@@ -85,6 +89,7 @@ protected:
 	ACrowdFlowExitStaircase* CurrentStaircase = nullptr;
 
 	
+	FTimerHandle TH_GoAround;
 	FTimerHandle TH_Movement;
 	FTimerHandle TH_DirectMove;
 
@@ -133,6 +138,12 @@ protected:
 	void FollowLeftMostWall();
 
 	UFUNCTION()
+	void BeginGoAround(FVector Direction);
+
+	UFUNCTION()
+	void GoAround(FVector Direction);
+
+	UFUNCTION()
 	void StartSimulating();
 
 	UFUNCTION()
@@ -166,6 +177,8 @@ public:
 
 	int32 CurrentUnitsLeft = 0;
 
+	int32 GoAroundUnits = 0;
+
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 	int32 GetDistanceToFinalDestination();
 
@@ -179,4 +192,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 	int32 GetCurrentUnitsLeft();
+
+	bool IsWaitingForStairCase() const;
+
+	bool IsOnStairCase() const;
+
 };
