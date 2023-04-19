@@ -71,6 +71,11 @@ void ACrowdFlowExitStaircase::Tick(float DeltaTime)
 
 }
 
+bool ACrowdFlowExitStaircase::IsRightSideStaircase() const
+{
+	return RightSideGoesDown;
+}
+
 void ACrowdFlowExitStaircase::BeginTraceForAgents()
 {
 	GetWorld()->GetTimerManager().SetTimer(TH_AgentTrace, this, &ACrowdFlowExitStaircase::TraceForAgents, TraceRate, true);
@@ -116,7 +121,7 @@ void ACrowdFlowExitStaircase::TraceForAgents()
 			return;
 		}
 
-		Agent->MoveDownStair(this, RightSideGoesDown);
+		Agent->MoveDownStair(this);
 
 	}
 }

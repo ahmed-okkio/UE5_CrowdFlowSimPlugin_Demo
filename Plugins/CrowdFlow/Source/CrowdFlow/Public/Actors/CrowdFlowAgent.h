@@ -107,8 +107,6 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 	void MoveTowardsDirection(FVector Direction, int32 Units);
 
-	void MoveToLocation(const FVector Destination);
-	
 	bool IsFinalDestinationVisible() const;
 
 	bool IsExitOnSameFloor(FVector ExitLocation) const;
@@ -159,6 +157,9 @@ protected:
 	void OnLeftExit();
 
 	UFUNCTION()
+	void OnEnteredStaircase();
+
+	UFUNCTION()
 	void OnFoundRightMostWall();
 
 	UFUNCTION()
@@ -186,7 +187,7 @@ public:
 
 	void MoveToExit(ACrowdFlowExitSign* ExitSign);
 
-	void MoveDownStair(ACrowdFlowExitStaircase* Staircase, bool RightStaircase);
+	void MoveDownStair(ACrowdFlowExitStaircase* Staircase);
 
 	static float GetSphereRadius();
 
