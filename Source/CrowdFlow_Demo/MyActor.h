@@ -4,26 +4,23 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "CrowdFlowFinalDestination.generated.h"
+#include "MyActor.generated.h"
 
 UCLASS()
-class CROWDFLOW_API ACrowdFlowFinalDestination : public AActor
+class CROWDFLOW_DEMO_API AMyActor : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
-	ACrowdFlowFinalDestination();
+	AMyActor();
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-	
-	UPROPERTY(EditAnywhere, Category = Destination)
-	class UBillboardComponent* SpriteComponent;
+
 };

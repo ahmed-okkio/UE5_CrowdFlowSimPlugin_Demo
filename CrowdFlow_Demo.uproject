@@ -24,6 +24,14 @@
 		{
 			"Name": "CrowdFlowDemo",
 			"Enabled": false
+		},
+		{
+			"Name": "CrowdFlow",
+			"Enabled": true
 		}
+	],
+	"TargetPlatforms": [
+		"Windows",
+		"HoloLens"
 	]
 }

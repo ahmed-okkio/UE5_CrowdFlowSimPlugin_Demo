@@ -42,25 +42,25 @@ public:
 protected:
 	static float SphereRadius;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = Agent)
 	float SameFloorHeightMargin = 200.f;
 
-	UPROPERTY(EditInstanceOnly)
+	UPROPERTY(EditInstanceOnly, Category = Agent)
 	float UnitsPerMove = 100.0f;
 	
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = Agent)
 	float ExitReachedRange = 100.0f;
 	
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = Agent)
 	float DirectMoveSearchRate=  0.5f;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = Agent)
 	float Speed = 0.005;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = Agent)
 	float TurnSmoothness = 8.0f;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = Agent)
 	float UnitsToMovePastExit = 500.0f;
 
 	float PersonalSpace = 50.0f;
@@ -169,7 +169,7 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = Agent)
 	class UStaticMeshComponent* SphereComponent;
 
 	FVector FinalDestination;

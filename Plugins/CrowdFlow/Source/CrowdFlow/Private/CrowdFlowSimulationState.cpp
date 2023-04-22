@@ -9,8 +9,6 @@ void ACrowdFlowSimulationState::HandleBeginPlay()
   
 }
 
-
-
 void ACrowdFlowSimulationState::StartTimer()
 {
 

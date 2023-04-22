@@ -14,7 +14,7 @@ ACrowdFlowFinalDestination::ACrowdFlowFinalDestination()
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root Component"));
 	SpriteComponent = CreateDefaultSubobject<UBillboardComponent>(TEXT("Billboard Icon"));
 	SpriteComponent->SetupAttachment(RootComponent);
-	SpriteComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	//SpriteComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 
 }
 

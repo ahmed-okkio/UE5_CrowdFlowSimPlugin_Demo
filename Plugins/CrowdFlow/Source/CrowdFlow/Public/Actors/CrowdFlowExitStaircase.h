@@ -10,7 +10,7 @@ UCLASS()
 class CROWDFLOW_API ACrowdFlowExitStaircase : public AActor
 {
 	GENERATED_BODY()
-	
+
 public:	
 	// Sets default values for this actor's properties
 	ACrowdFlowExitStaircase();
@@ -21,8 +21,10 @@ protected:
 
 	virtual bool ShouldTickIfViewportsOnly() const override;
 
-	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& e) override;
+#if WITH_EDITOR
 
+	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& e) override;
+#endif
 	void BeginTraceForAgents();
 
 	void TraceForAgents();
@@ -32,22 +34,22 @@ protected:
 
 	uint8 DepthPriority = 0;
 
-	UPROPERTY(EditInstanceOnly)
+	UPROPERTY(EditInstanceOnly, Category = Staircase)
 	FVector BoundingBox = FVector(100,100,100);
 
-	UPROPERTY(EditInstanceOnly)
+	UPROPERTY(EditInstanceOnly, Category = Staircase)
 	bool RightSideGoesDown = false;
 
-	UPROPERTY(EditInstanceOnly)
+	UPROPERTY(EditInstanceOnly, Category = Staircase)
 	bool DrawDetectionDebug = true;
 	
-	UPROPERTY(EditInstanceOnly)
+	UPROPERTY(EditInstanceOnly, Category = Staircase)
 	bool SeeBoundingBoxThroughWalls = false;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = Staircase)
 	float TraceRate = 0.2f;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = Staircase)
 	class UBillboardComponent* SpriteComponent;
 
 public:	

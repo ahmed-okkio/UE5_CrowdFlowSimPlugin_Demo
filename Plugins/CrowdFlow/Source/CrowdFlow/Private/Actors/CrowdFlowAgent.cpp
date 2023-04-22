@@ -151,7 +151,14 @@ bool ACrowdFlowAgent::IsBestMove(FMove NewMove) const
 	
 	FHitResult Hit;
 	GetWorld()->LineTraceSingleByChannel(Hit, CurrentLocation, NewMoveLocation, ECollisionChannel::ECC_PhysicsBody);
-	DrawDebugLine(GetWorld(), CurrentLocation, NewMoveLocation, Hit.bBlockingHit ? FColor::Blue : FColor::Red, false);
+	ACrowdFlowGameMode* GM = Cast<ACrowdFlowGameMode>(GetWorld()->GetAuthGameMode());
+	if (GM)
+	{
+		if (GM->GetDebugMode())
+		{
+			DrawDebugLine(GetWorld(), CurrentLocation, NewMoveLocation, Hit.bBlockingHit ? FColor::Blue : FColor::Red, false, 0.1);
+		}
+	}
 
 	if (Hit.bBlockingHit)
 	{
@@ -160,7 +167,13 @@ bool ACrowdFlowAgent::IsBestMove(FMove NewMove) const
 
 	if (NextMove.Units == 0)
 	{
-		DrawDebugLine(GetWorld(), CurrentLocation, NewMoveLocation, FColor::Purple, false);
+		if (GM)
+		{
+			if (GM->GetDebugMode())
+			{
+				DrawDebugLine(GetWorld(), CurrentLocation, NewMoveLocation, FColor::Purple, false, 0.1);
+			}
+		}
 		return true;
 
 	}
@@ -170,8 +183,14 @@ bool ACrowdFlowAgent::IsBestMove(FMove NewMove) const
 		return false;
 	}
 
-	DrawDebugLine(GetWorld(), CurrentLocation, NewMoveLocation, FColor::Green, false);
-
+	if (GM)
+	{
+		if (GM->GetDebugMode())
+		{
+			DrawDebugLine(GetWorld(), CurrentLocation, NewMoveLocation, FColor::Green, false, 0.1);
+		}
+	}
+	
 	return true;
 }
 
@@ -290,9 +309,17 @@ void ACrowdFlowAgent::MoveTillUnitAmount(FVector Direction)
 	{
 		if (ACrowdFlowAgent* HitActor = Cast<ACrowdFlowAgent>(Hit.GetActor()))
 		{
-			DrawDebugLine(GetWorld(), GetActorLocation(), Hit.Location, FColor::Red, false);
-			DrawDebugLine(GetWorld(), OriginL, DestinationL, FColor::Red, false);
-			DrawDebugLine(GetWorld(), OriginR, DestinationR, FColor::Red, false);
+			ACrowdFlowGameMode* GM = Cast<ACrowdFlowGameMode>(GetWorld()->GetAuthGameMode());
+
+			if (GM)
+			{
+				if (GM->GetDebugMode())
+				{
+					DrawDebugLine(GetWorld(), GetActorLocation(), Hit.Location, FColor::Red, false, 0.2);
+					DrawDebugLine(GetWorld(), OriginL, DestinationL, FColor::Red, false, 0.2);
+					DrawDebugLine(GetWorld(), OriginR, DestinationR, FColor::Red, false, 0.2);
+				}
+			}
 
 			SphereComponent->SetAllPhysicsAngularVelocityInDegrees(FVector(0, 0, 0));
 
@@ -368,6 +395,7 @@ void ACrowdFlowAgent::MoveTillBlocked(FVector Direction)
 			return;
 		}
 	}
+	ACrowdFlowGameMode* GM = Cast<ACrowdFlowGameMode>(GetWorld()->GetAuthGameMode());
 
 	FVector NewMoveLocation = GetActorLocation() + Direction * (PersonalSpace + SphereRadius);
 
@@ -377,7 +405,13 @@ void ACrowdFlowAgent::MoveTillBlocked(FVector Direction)
 	{
 		if (ACrowdFlowAgent* HitActor = Cast<ACrowdFlowAgent>(Hit.GetActor()))
 		{
-			DrawDebugLine(GetWorld(), GetActorLocation(), Hit.Location, FColor::Red, false);
+			if (GM)
+			{
+				if (GM->GetDebugMode())
+				{
+					DrawDebugLine(GetWorld(), GetActorLocation(), Hit.Location, FColor::Red, false, 0.2);
+				}
+			}
 			SphereComponent->SetAllPhysicsAngularVelocityInDegrees(FVector(0, 0, 0));
 
 			// Possibly add timer to attempt to go around if agent doesn't move out of the way
@@ -417,14 +451,26 @@ void ACrowdFlowAgent::MoveTillBlocked(FVector Direction)
 				return;
 			}
 
-			DrawDebugLine(GetWorld(), GetActorLocation(), NewMoveLocation, FColor::Red,false);
+			if (GM)
+			{
+				if (GM->GetDebugMode())
+				{
+					DrawDebugLine(GetWorld(), GetActorLocation(), NewMoveLocation, FColor::Red,false, 0.2);
+				}
+			}
 
 			GetWorld()->GetTimerManager().ClearTimer(TH_Movement);
 			MovementBlockedDelegate.Broadcast();
 		}
 		else
 		{
-			DrawDebugLine(GetWorld(), GetActorLocation(), NewMoveLocation, FColor::Blue,false,1);
+			if (GM)
+			{
+				if (GM->GetDebugMode())
+				{
+					DrawDebugLine(GetWorld(), GetActorLocation(), NewMoveLocation, FColor::Blue,false,1);
+				}
+			}
 
 			CurrentUnitsLeft = PersonalSpace;
 		}
@@ -485,7 +531,13 @@ void ACrowdFlowAgent::Tick(float DeltaTime)
 
 	if (FoundDirectMoveToExit)
 	{
-		DrawDebugLine(GetWorld(), GetActorLocation(), FinalDestination, FColor::Red, false);
+		if (GameMode)
+		{
+			if (GameMode->GetDebugMode())
+			{
+				DrawDebugLine(GetWorld(), GetActorLocation(), FinalDestination, FColor::Red, false);
+			}
+		}
 	}
 }
 
@@ -552,8 +604,17 @@ void ACrowdFlowAgent::BeginGoAround(FVector Direction)
 	FVector SoftLeftDestination = GetActorLocation() + SoftLeftDirection * (PersonalSpace + SphereRadius);
 	FVector HardLeftDestination = GetActorLocation() + HardLeftDirection * (PersonalSpace + SphereRadius);
 
+	ACrowdFlowGameMode* GM = Cast<ACrowdFlowGameMode>(GetWorld()->GetAuthGameMode());
+
 	GetWorld()->LineTraceSingleByChannel(Hit, GetActorLocation(), SoftLeftDestination, ECollisionChannel::ECC_PhysicsBody);
-	DrawDebugLine(GetWorld(), GetActorLocation(), SoftLeftDestination, FColor::Red, false);
+	if (GM)
+	{
+		if (GM->GetDebugMode())
+		{
+
+			DrawDebugLine(GetWorld(), GetActorLocation(), SoftLeftDestination, FColor::Red, false, 0.2);
+		}
+	}
 
 	if (!Hit.bBlockingHit)
 	{
@@ -564,7 +625,14 @@ void ACrowdFlowAgent::BeginGoAround(FVector Direction)
 		return;
 	}
 
-	DrawDebugLine(GetWorld(), GetActorLocation(), HardLeftDestination, FColor::Red, false);
+	if (GM)
+	{
+		if (GM->GetDebugMode())
+		{
+
+			DrawDebugLine(GetWorld(), GetActorLocation(), HardLeftDestination, FColor::Red, false, 0.2);
+		}
+	}
 	GetWorld()->LineTraceSingleByChannel(Hit, GetActorLocation(), HardLeftDestination, ECollisionChannel::ECC_PhysicsBody);
 	if (!Hit.bBlockingHit)
 	{
@@ -583,7 +651,14 @@ void ACrowdFlowAgent::BeginGoAround(FVector Direction)
 	FVector SoftRightDestination = GetActorLocation() + SoftRightDirection * (PersonalSpace + SphereRadius);
 	FVector HardRightDestination = GetActorLocation() + HardRightDirection * (PersonalSpace + SphereRadius);
 
-	DrawDebugLine(GetWorld(), GetActorLocation(), SoftRightDestination, FColor::Red, false);
+	if (GM)
+	{
+		if (GM->GetDebugMode())
+		{
+
+			DrawDebugLine(GetWorld(), GetActorLocation(), SoftRightDestination, FColor::Red, false, 0.2);
+		}
+	}
 	GetWorld()->LineTraceSingleByChannel(Hit, GetActorLocation(), SoftRightDestination, ECollisionChannel::ECC_PhysicsBody);
 	if (!Hit.bBlockingHit)
 	{
@@ -594,7 +669,14 @@ void ACrowdFlowAgent::BeginGoAround(FVector Direction)
 		return;
 	}
 
-	DrawDebugLine(GetWorld(), GetActorLocation(), HardRightDestination, FColor::Red, false);
+	if (GM)
+	{
+		if (GM->GetDebugMode())
+		{
+
+			DrawDebugLine(GetWorld(), GetActorLocation(), HardRightDestination, FColor::Red, false, 0.2);
+		}
+	}
 	GetWorld()->LineTraceSingleByChannel(Hit, GetActorLocation(), HardRightDestination, ECollisionChannel::ECC_PhysicsBody);
 	if (!Hit.bBlockingHit)
 	{

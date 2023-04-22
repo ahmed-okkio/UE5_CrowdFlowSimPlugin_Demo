@@ -10,13 +10,19 @@
 	"DocsURL": "",
 	"MarketplaceURL": "",
 	"SupportURL": "",
+	"EngineVersion": "5.1.0",
 	"CanContainContent": true,
 	"IsBetaVersion": true,
-	"IsExperimentalVersion": false,
-	"Installed": false,
+	"Installed": true,
+	"EnabledByDefault": true,
 	"Modules": [
 		{
 			"Name": "CrowdFlow",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "CrowdFlowEditor",
 			"Type": "Editor",
 			"LoadingPhase": "Default"
 		}

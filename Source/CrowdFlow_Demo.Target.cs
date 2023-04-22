@@ -11,5 +11,7 @@ public class CrowdFlow_DemoTarget : TargetRules
 		DefaultBuildSettings = BuildSettingsVersion.V2;
 		IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_1;
 		ExtraModuleNames.Add("CrowdFlow_Demo");
-	}
+        ExtraModuleNames.Add("CrowdFlow");
+
+    }
 }

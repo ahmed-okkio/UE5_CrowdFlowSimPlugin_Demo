@@ -11,6 +11,7 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "Components/BillboardComponent.h"
 #include "Actors/CrowdFlowAgent.h"
+#include "GameMode/CrowdFlowGameMode.h"
 
 // Sets default values
 ACrowdFlowExitSign::ACrowdFlowExitSign()
@@ -30,8 +31,6 @@ void ACrowdFlowExitSign::BeginPlay()
 
 	ExitSignAgentDestination = GetActorLocation() + (GetActorForwardVector() * AgentDestinationDistanceFromSign);
 	BeginTraceForAgents();
-
-
 }
 
 void ACrowdFlowExitSign::PostLoad()
@@ -49,12 +48,6 @@ void ACrowdFlowExitSign::PostInitProperties()
 {
 	Super::PostInitProperties();
 
-}
-
-void ACrowdFlowExitSign::PostEditMove(bool bFinished)
-{
-	
-	Super::PostEditMove(bFinished);
 }
 
 void ACrowdFlowExitSign::PostRegisterAllComponents()
@@ -90,9 +83,21 @@ void ACrowdFlowExitSign::TraceForAgents()
 		HitObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_GameTraceChannel1));
 		bool bHit = GetWorld()->SweepMultiByChannel(HitResults, Center, Center, Rotation.Quaternion(), ECollisionChannel::ECC_GameTraceChannel1, FCollisionShape::MakeBox(DetectionRange), FCollisionQueryParams());
 
+		ACrowdFlowGameMode* GM = Cast<ACrowdFlowGameMode>(GetWorld()->GetAuthGameMode());
+
 		if (!bHit)
 		{
-			DrawDebugBox(GetWorld(), Center, DetectionRange, GetActorRotation().Quaternion(), KnownExit ? FColor::Emerald : FColor::Orange, false, TraceRate);
+
+
+			if (GM)
+			{
+				if (GM->GetDebugMode())
+				{
+
+					DrawDebugBox(GetWorld(), Center, DetectionRange, GetActorRotation().Quaternion(), KnownExit ? FColor::Emerald : FColor::Orange, false, TraceRate);
+				}
+			}
+			
 			return;
 		}
 
@@ -105,7 +110,16 @@ void ACrowdFlowExitSign::TraceForAgents()
 				return;
 			}
 
-			DrawDebugBox(GetWorld(), Center, DetectionRange, GetActorRotation().Quaternion(), KnownExit ? FColor::Emerald : FColor::Orange, false, TraceRate, 0 , 2);
+
+
+			if (GM)
+			{
+				if (GM->GetDebugMode())
+				{
+					DrawDebugBox(GetWorld(), Center, DetectionRange, GetActorRotation().Quaternion(), KnownExit ? FColor::Emerald : FColor::Orange, false, TraceRate, 0, 2);
+				}
+			}
+			
 			FString Name = GetActorNameOrLabel();
 			if(Name == "BP_ExitSign5")
 			{
@@ -133,13 +147,29 @@ void ACrowdFlowExitSign::Tick(float DeltaTime)
 	if (!HasActorBegunPlay() && ShowDetectionRange)
 	{
 		FVector Center = (GetActorLocation() + DetectionRangeOffset) + GetActorForwardVector() * DetectionRange.X;
-		DrawDebugBox(GetWorld(), Center, DetectionRange, GetActorRotation().Quaternion(), KnownExit? FColor::Emerald : FColor::Orange, false);
+		ACrowdFlowGameMode* GM = Cast<ACrowdFlowGameMode>(GetWorld()->GetAuthGameMode());
+
+		if (GM)
+		{
+			if (GM->GetDebugMode())
+			{
+				DrawDebugBox(GetWorld(), Center, DetectionRange, GetActorRotation().Quaternion(), KnownExit ? FColor::Emerald : FColor::Orange, false);
+			}
+		}
 	}
 
 	if (!HasActorBegunPlay() && ShowPhysicalExitBounds)
 	{
 		FVector Center = (GetActorLocation() + PhysicalExitOffset) + GetActorForwardVector() * PhysicalExitBounds.X;
-		DrawDebugBox(GetWorld(), Center, PhysicalExitBounds, GetActorRotation().Quaternion(), FColor::Silver , false);
+		ACrowdFlowGameMode* GM = Cast<ACrowdFlowGameMode>(GetWorld()->GetAuthGameMode());
+
+		if (GM)
+		{
+			if (GM->GetDebugMode())
+			{
+				DrawDebugBox(GetWorld(), Center, PhysicalExitBounds, GetActorRotation().Quaternion(), FColor::Silver, false);
+			}
+		}
 	}
 }
 

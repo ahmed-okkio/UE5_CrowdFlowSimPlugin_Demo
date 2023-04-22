@@ -21,6 +21,8 @@ class CROWDFLOW_API ACrowdFlowGameMode : public AGameModeBase
 private:
 	bool bIsSimulationStarted = false;
 
+	bool DebugModeAll = false;
+
 protected:
 	ACrowdFlowSimulationState* SimState = nullptr;
 
@@ -34,12 +36,22 @@ public:
 	bool StartSimulationOnBeginPlay = false;
 	FSimulationStartDelegate OnSimulationStart;
 
+	UFUNCTION(BlueprintCallable, Category = Simulation)
 	void StartSimulation();
 
+	UFUNCTION(BlueprintCallable, Category = Simulation)
 	void StopSimulation();
 
 	FSimulationStartDelegate GetSimulationStartDelegate();
 
 	bool IsSimulationStarted() const;
+
+	bool GetDebugMode() const;
+
+	UFUNCTION(BlueprintCallable, Category = Simulation)
+	void EnableDebugMode();
+
+
+
 
 };

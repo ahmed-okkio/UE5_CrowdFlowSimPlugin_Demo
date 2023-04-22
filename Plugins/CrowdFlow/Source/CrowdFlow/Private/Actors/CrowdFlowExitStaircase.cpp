@@ -4,6 +4,7 @@
 #include "Components/BillboardComponent.h"
 #include "Actors/CrowdFlowAgent.h"	
 #include "Actors/CrowdFlowExitStaircase.h"
+#include "GameMode/CrowdFlowGameMode.h"
 
 // Sets default values
 ACrowdFlowExitStaircase::ACrowdFlowExitStaircase()
@@ -21,7 +22,7 @@ void ACrowdFlowExitStaircase::BeginPlay()
 {
 	Super::BeginPlay();
 	BeginTraceForAgents();
-	
+	ACrowdFlowGameMode* GM = Cast<ACrowdFlowGameMode>(GetWorld()->GetAuthGameMode());
 	
 }
 
@@ -36,7 +37,7 @@ bool ACrowdFlowExitStaircase::ShouldTickIfViewportsOnly() const
 		return false;
 	}
 }
-
+#if WITH_EDITOR
 void ACrowdFlowExitStaircase::PostEditChangeProperty(struct FPropertyChangedEvent& e)
 {
 	FName PropertyName = (e.Property != NULL) ? e.Property->GetFName() : NAME_None;
@@ -55,7 +56,7 @@ void ACrowdFlowExitStaircase::PostEditChangeProperty(struct FPropertyChangedEven
 	}
 	Super::PostEditChangeProperty(e);
 }
-
+#endif
 // Called every frame
 void ACrowdFlowExitStaircase::Tick(float DeltaTime)
 {
@@ -66,7 +67,15 @@ void ACrowdFlowExitStaircase::Tick(float DeltaTime)
 
 		FVector Center = SpriteComponent->GetComponentLocation();
 
-		DrawDebugBox(GetWorld(), Center, BoundingBox, GetActorRotation().Quaternion(), FColor::Green, false, 0.f, DepthPriority, 5);
+		ACrowdFlowGameMode* GM = Cast<ACrowdFlowGameMode>(GetWorld()->GetAuthGameMode());
+
+		if (GM)
+		{
+			if (GM->GetDebugMode())
+			{
+				DrawDebugBox(GetWorld(), Center, BoundingBox, GetActorRotation().Quaternion(), FColor::Green, false, 0.f, DepthPriority, 5);
+			}
+		}
 	}
 
 }
@@ -89,29 +98,34 @@ void ACrowdFlowExitStaircase::TraceForAgents()
 	TArray<TEnumAsByte<EObjectTypeQuery>> HitObjectTypes;
 	TArray<AActor*, FDefaultAllocator> ignoredActors;
 
-	HitObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_PhysicsBody));
-	bool bHit = UKismetSystemLibrary::BoxTraceMultiForObjects(
-		GetWorld(),
-		Center,
-		Center,
-		BoundingBox,
-		Rotation,
-		HitObjectTypes,
-		false,
-		ignoredActors,
-		EDrawDebugTrace::ForDuration,
-		HitResults,
-		true,
-		FLinearColor::Blue,
-		FLinearColor::Green,
-		TraceRate
-	);
+	ACrowdFlowGameMode* GM = Cast<ACrowdFlowGameMode>(GetWorld()->GetAuthGameMode());
 
-	if (!bHit)
+	if (GM)
 	{
-		return;
-	}
+		HitObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_PhysicsBody));
+		bool bHit = UKismetSystemLibrary::BoxTraceMultiForObjects(
+			GetWorld(),
+			Center,
+			Center,
+			BoundingBox,
+			Rotation,
+			HitObjectTypes,
+			false,
+			ignoredActors,
+			EDrawDebugTrace::ForDuration,
+			HitResults,
+			true,
+			GM->GetDebugMode() ? FLinearColor::Blue : FLinearColor::Transparent,
+			GM->GetDebugMode() ? FLinearColor::Green : FLinearColor::Transparent,
+			TraceRate
+		);
+		if (!bHit)
+		{
+			return;
+		}
 
+	}
+	
 	for (auto HitResult : HitResults)
 	{
 		ACrowdFlowAgent* Agent = Cast<ACrowdFlowAgent>(HitResult.GetActor());

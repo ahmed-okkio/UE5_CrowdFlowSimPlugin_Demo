@@ -23,8 +23,6 @@ protected:
 	virtual void PostLoad() override;
 	virtual void PostLoadSubobjects(FObjectInstancingGraph* OuterInstanceGraph) override;
 	virtual void PostInitProperties() override;
-	
-	virtual void PostEditMove(bool bFinished);
 
 	virtual void PostRegisterAllComponents() override;
 
@@ -33,38 +31,38 @@ protected:
 	bool DetectionActive = false;
 
 	
-	UPROPERTY(VisibleInstanceOnly)
+	UPROPERTY(VisibleInstanceOnly, Category = "Exit Sign")
 	TArray<class ACrowdFlowAgent*> Agents;
 
-	UPROPERTY(EditInstanceOnly)
+	UPROPERTY(EditInstanceOnly, Category = "Exit Sign")
 	bool KnownExit = false;
 
-	UPROPERTY(EditInstanceOnly)
+	UPROPERTY(EditInstanceOnly, Category = "Exit Sign")
 	bool ShowDetectionRange = false;
 
-	UPROPERTY(EditInstanceOnly)
+	UPROPERTY(EditInstanceOnly, Category = "Exit Sign")
 	bool ShowPhysicalExitBounds = false;
 
-	UPROPERTY(EditInstanceOnly)
+	UPROPERTY(EditInstanceOnly, Category = "Exit Sign")
 	FVector DetectionRange;
 
-	UPROPERTY(EditInstanceOnly)
+	UPROPERTY(EditInstanceOnly, Category = "Exit Sign")
 	FVector DetectionRangeOffset;
 
-	UPROPERTY(EditInstanceOnly)
+	UPROPERTY(EditInstanceOnly, Category = "Exit Sign")
 	FVector PhysicalExitBounds;
 
-	UPROPERTY(EditInstanceOnly)
+	UPROPERTY(EditInstanceOnly, Category = "Exit Sign")
 	FVector PhysicalExitOffset;
 
 	FVector ExitSignAgentDestination;
 
 	FTimerHandle TH_AgentTrace;
 
-	UPROPERTY(EditInstanceOnly)
+	UPROPERTY(EditInstanceOnly, Category = "Exit Sign")
 	float AgentDestinationDistanceFromSign = 150.0f;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Exit Sign")
 	float TraceRate = 0.2f;
 
 	void BeginTraceForAgents();

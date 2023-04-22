@@ -58,3 +58,13 @@ bool ACrowdFlowGameMode::IsSimulationStarted() const
 {
     return bIsSimulationStarted;
 }
+
+bool ACrowdFlowGameMode::GetDebugMode() const
+{
+    return DebugModeAll;
+}
+
+void ACrowdFlowGameMode::EnableDebugMode()
+{
+    DebugModeAll = true;
+}
