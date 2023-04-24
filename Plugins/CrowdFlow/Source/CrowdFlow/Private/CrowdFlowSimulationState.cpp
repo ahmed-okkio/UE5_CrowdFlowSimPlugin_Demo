@@ -2,6 +2,10 @@
 
 
 #include "CrowdFlowSimulationState.h"
+#include "Actors/CrowdFlowAgent.h"
+#include "Misc/FileHelper.h"
+#include "Misc/Paths.h"
+#include "Kismet/GameplayStatics.h"
 
 void ACrowdFlowSimulationState::HandleBeginPlay()
 {
@@ -50,5 +54,36 @@ FTimeHMS ACrowdFlowSimulationState::GetTimeInHMS()
 void ACrowdFlowSimulationState::SubmitAgentData(FAgentData AgentData)
 {
     AgentDataArray.Add(AgentData);
+
+    TArray<AActor*> AllActors;
+    UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACrowdFlowAgent::StaticClass(), AllActors);
+
+    if (AllActors.IsEmpty())
+    {
+        WriteAgentDataToFile();
+    }
 }
 
+void ACrowdFlowSimulationState::WriteAgentDataToFile()
+{
+    // Construct the output file path
+    FString OutputFilePath = FPaths::Combine(FPaths::ProjectDir(), TEXT("ResultsData.txt"));
+
+    // Open the output file for writing
+    FString OutputFileContents;
+    for (const FAgentData& AgentData : AgentDataArray)
+    {
+        // Format the agent data as a string and append it to the output file contents
+        FString AgentDataString = FString::Printf(TEXT("%s,%02d:%02d:%02d,%02d:%02d:%02d,%02d:%02d:%02d,%d,%.2f,%.2f\n"),
+            *AgentData.AgentName,
+            AgentData.StartTime.Hours, AgentData.StartTime.Minutes, AgentData.StartTime.Seconds,
+            AgentData.EndTime.Hours, AgentData.EndTime.Minutes, AgentData.EndTime.Seconds,
+            AgentData.Duration.Hours, AgentData.Duration.Minutes, AgentData.Duration.Seconds,
+            AgentData.UnitsTraveled,
+            AgentData.AverageUnitsPerSecond,
+            AgentData.StartingDistanceFromDest);
+        OutputFileContents += AgentDataString;
+    }
+
+    FFileHelper::SaveStringToFile(OutputFileContents, *OutputFilePath);
+}

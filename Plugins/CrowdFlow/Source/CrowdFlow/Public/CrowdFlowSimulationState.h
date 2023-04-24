@@ -51,6 +51,9 @@ struct FAgentData
 
 	float AverageUnitsPerSecond;
 
+	float StartingDistanceFromDest;
+
+
 	FTimeHMS GetEvacuationDuration()
 	{
 		int32 DurationInSeconds = ((EndTime.Hours - StartTime.Hours) * 3600) +
@@ -88,6 +91,7 @@ protected:
 	TArray<FAgentData> AgentDataArray;
 
 	virtual void HandleBeginPlay() override;
+	void WriteAgentDataToFile();
 
 public:
 

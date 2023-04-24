@@ -51,6 +51,7 @@ void ACrowdFlowAgent::StartSimulating()
 	}
 
 	NearestExitLocation = GetNearestExitLocation();
+	AgentData.StartingDistanceFromDest = FVector::Distance(GetActorLocation(), FinalDestination);
 
 	if (ACrowdFlowSimulationState* SimState = Cast<ACrowdFlowSimulationState>(GetWorld()->GetGameState()))
 	{
