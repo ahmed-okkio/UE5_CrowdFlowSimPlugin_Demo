@@ -58,7 +58,7 @@ void ACrowdFlowSimulationState::SubmitAgentData(FAgentData AgentData)
     TArray<AActor*> AllActors;
     UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACrowdFlowAgent::StaticClass(), AllActors);
 
-    if (AllActors.IsEmpty())
+    if (AllActors.Num() == 1)
     {
         WriteAgentDataToFile();
     }
@@ -69,8 +69,10 @@ void ACrowdFlowSimulationState::WriteAgentDataToFile()
     // Construct the output file path
     FString OutputFilePath = FPaths::Combine(FPaths::ProjectDir(), TEXT("ResultsData.txt"));
 
+    FString OutputFileContents = TEXT("AgentName,StartTime,EndTime,Duration,UnitsTravelled,AverageUnitsPerSecond,StartingDistanceFromDest\n");
+
     // Open the output file for writing
-    FString OutputFileContents;
+    
     for (const FAgentData& AgentData : AgentDataArray)
     {
         // Format the agent data as a string and append it to the output file contents

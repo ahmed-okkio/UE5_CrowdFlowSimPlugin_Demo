@@ -74,6 +74,15 @@ void ACrowdFlowExitSign::BeginTraceForAgents()
 
 void ACrowdFlowExitSign::TraceForAgents()
 {		
+		ACrowdFlowGameMode* GM = Cast<ACrowdFlowGameMode>(GetWorld()->GetAuthGameMode());
+
+		if (GM)
+		{
+			if (!GM->IsSimulationStarted())
+			{
+				return;
+			}
+		}
 		FVector Center = (GetActorLocation() + DetectionRangeOffset) + (GetActorForwardVector().GetSafeNormal() * DetectionRange.X);
 		FRotator Rotation = GetActorRotation();
 		TArray<FHitResult> HitResults;
@@ -83,7 +92,6 @@ void ACrowdFlowExitSign::TraceForAgents()
 		HitObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_GameTraceChannel1));
 		bool bHit = GetWorld()->SweepMultiByChannel(HitResults, Center, Center, Rotation.Quaternion(), ECollisionChannel::ECC_GameTraceChannel1, FCollisionShape::MakeBox(DetectionRange), FCollisionQueryParams());
 
-		ACrowdFlowGameMode* GM = Cast<ACrowdFlowGameMode>(GetWorld()->GetAuthGameMode());
 
 		if (!bHit)
 		{
@@ -183,9 +191,16 @@ bool ACrowdFlowExitSign::IsKnownExit() const
 	return KnownExit;
 }
 
-int32 ACrowdFlowExitSign::GetAgentCount() const
+int32 ACrowdFlowExitSign::GetAgentCount(ACrowdFlowAgent* CheckingAgent) const
 {
+	if (Agents.Contains(CheckingAgent))
+	{
+		return Agents.Num() - 1;
+
+	}
+
 	return Agents.Num();
+
 }
 
 void ACrowdFlowExitSign::FollowSign(ACrowdFlowAgent* FollowingAgent) 

@@ -79,7 +79,7 @@ public:
 
 	bool IsKnownExit() const;
 
-	int32 GetAgentCount() const;
+	int32 GetAgentCount(ACrowdFlowAgent* CheckingAgent) const;
 
 	void FollowSign(ACrowdFlowAgent* FollowingAgent);
 
