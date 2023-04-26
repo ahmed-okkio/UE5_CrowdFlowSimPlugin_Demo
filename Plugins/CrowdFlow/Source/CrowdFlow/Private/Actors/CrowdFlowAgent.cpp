@@ -99,7 +99,7 @@ void ACrowdFlowAgent::AttemptDirectMoveToFinalDestination()
 
 		NextMove.Direction = FinalDestination - GetActorLocation();
 		NextMove.Direction.Normalize();
-		NextMove.Units = FVector::Distance(FinalDestination, GetActorLocation());
+		NextMove.Units = FVector::Distance(FinalDestination, GetActorLocation()) - ExitReachedRange;
 
 		ClearMoveQueue();
 		ExecuteNextMove();

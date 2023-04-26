@@ -66,8 +66,14 @@ void ACrowdFlowSimulationState::SubmitAgentData(FAgentData AgentData)
 
 void ACrowdFlowSimulationState::WriteAgentDataToFile()
 {
-    // Construct the output file path
-    FString OutputFilePath = FPaths::Combine(FPaths::ProjectDir(), TEXT("ResultsData.txt"));
+    // Get the current date and time
+    FDateTime Now = FDateTime::Now();
+
+    // Construct the output file path with the current date and time as part of the file name
+    FString OutputFilePath = FPaths::Combine(FPaths::ProjectDir(), FString::Printf(TEXT("ResultData_%04d%02d%02d_%02d%02d%02d.csv"),
+        Now.GetYear(), Now.GetMonth(), Now.GetDay(),
+        Now.GetHour(), Now.GetMinute(), Now.GetSecond()));
+
 
     FString OutputFileContents = TEXT("AgentName,StartTime,EndTime,Duration,UnitsTravelled,AverageUnitsPerSecond,StartingDistanceFromDest\n");
 

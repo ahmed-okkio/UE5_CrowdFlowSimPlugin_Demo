@@ -105,6 +105,10 @@ void ACrowdFlowExitSign::TraceForAgents()
 					DrawDebugBox(GetWorld(), Center, DetectionRange, GetActorRotation().Quaternion(), KnownExit ? FColor::Emerald : FColor::Orange, false, TraceRate);
 				}
 			}
+			else
+			{
+				DrawDebugBox(GetWorld(), Center, DetectionRange, GetActorRotation().Quaternion(), KnownExit ? FColor::Emerald : FColor::Orange, false);
+			}
 			
 			return;
 		}
@@ -127,16 +131,12 @@ void ACrowdFlowExitSign::TraceForAgents()
 					DrawDebugBox(GetWorld(), Center, DetectionRange, GetActorRotation().Quaternion(), KnownExit ? FColor::Emerald : FColor::Orange, false, TraceRate, 0, 2);
 				}
 			}
-			
-			FString Name = GetActorNameOrLabel();
-			if(Name == "BP_ExitSign5")
-			{
-				FName t = FName();
-				Name = "";
-				Agent->SeeExitSign(this);
-
-			}
 			else
+			{
+				DrawDebugBox(GetWorld(), Center, DetectionRange, GetActorRotation().Quaternion(), KnownExit ? FColor::Emerald : FColor::Orange, false);
+			}
+
+			if (!Agents.Contains(Agent))
 			{
 				Agent->SeeExitSign(this);
 			}
@@ -164,6 +164,10 @@ void ACrowdFlowExitSign::Tick(float DeltaTime)
 				DrawDebugBox(GetWorld(), Center, DetectionRange, GetActorRotation().Quaternion(), KnownExit ? FColor::Emerald : FColor::Orange, false);
 			}
 		}
+		else
+		{
+			//DrawDebugBox(GetWorld(), Center, DetectionRange, GetActorRotation().Quaternion(), KnownExit ? FColor::Emerald : FColor::Orange, false);
+		}
 	}
 
 	if (!HasActorBegunPlay() && ShowPhysicalExitBounds)
@@ -177,6 +181,10 @@ void ACrowdFlowExitSign::Tick(float DeltaTime)
 			{
 				DrawDebugBox(GetWorld(), Center, PhysicalExitBounds, GetActorRotation().Quaternion(), FColor::Silver, false);
 			}
+		}
+		else
+		{
+			DrawDebugBox(GetWorld(), Center, DetectionRange, GetActorRotation().Quaternion(), KnownExit ? FColor::Emerald : FColor::Orange, false);
 		}
 	}
 }
