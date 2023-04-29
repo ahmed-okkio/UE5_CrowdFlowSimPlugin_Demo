@@ -166,7 +166,7 @@ void ACrowdFlowExitSign::Tick(float DeltaTime)
 		}
 		else
 		{
-			//DrawDebugBox(GetWorld(), Center, DetectionRange, GetActorRotation().Quaternion(), KnownExit ? FColor::Emerald : FColor::Orange, false);
+			DrawDebugBox(GetWorld(), Center, DetectionRange, GetActorRotation().Quaternion(), KnownExit ? FColor::Emerald : FColor::Orange, false);
 		}
 	}
 
@@ -184,7 +184,7 @@ void ACrowdFlowExitSign::Tick(float DeltaTime)
 		}
 		else
 		{
-			DrawDebugBox(GetWorld(), Center, DetectionRange, GetActorRotation().Quaternion(), KnownExit ? FColor::Emerald : FColor::Orange, false);
+			DrawDebugBox(GetWorld(), Center, PhysicalExitBounds, GetActorRotation().Quaternion(), FColor::Silver, false);
 		}
 	}
 }

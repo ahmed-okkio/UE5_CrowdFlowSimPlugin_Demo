@@ -36,8 +36,9 @@ void ACrowdFlowAgent::BeginPlay()
 	GameMode = Cast<ACrowdFlowGameMode>(GetWorld()->GetAuthGameMode());
 	if (GameMode)
 	{
-		GameMode->OnSimulationStart.AddDynamic(this, &ACrowdFlowAgent::StartSimulating);
+		//GameMode->OnSimulationStart.AddDynamic(this, &ACrowdFlowAgent::StartSimulating);
 	}
+
 }
 
 void ACrowdFlowAgent::StartSimulating()
@@ -742,15 +743,15 @@ void ACrowdFlowAgent::OnFoundRightMostWall()
 
 void ACrowdFlowAgent::SeeExitSign(ACrowdFlowExitSign* ExitSign)
 {
-	if (!ExitSign || FoundDirectMoveToExit)
-	{
-		return;
-	}
+	//if (!ExitSign || FoundDirectMoveToExit)
+	//{
+	//	return;
+	//}
 
-	if (ExitSign->IsKnownExit())
-	{
-		MoveToExit(ExitSign);
-	}
+	//if (ExitSign->IsKnownExit())
+	//{
+	//	MoveToExit(ExitSign);
+	//}
 }
 
 FVector ACrowdFlowAgent::GetNearestExitLocation()
@@ -802,6 +803,11 @@ int32 ACrowdFlowAgent::GetCurrentUnitsLeft()
 int32 ACrowdFlowAgent::GetDistanceToFinalDestination()
 {
 	return FVector::Distance(GetActorLocation(), FinalDestination);
+}
+
+FVector ACrowdFlowAgent::GetFinalDestination() const
+{
+	return FinalDestination;
 }
 
 bool ACrowdFlowAgent::IsWaitingForStairCase() const
