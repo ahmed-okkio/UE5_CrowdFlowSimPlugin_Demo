@@ -1,6 +1,5 @@
 # Visual Studio 2015 user specific files
 .vs/
-CrowdFlow/
 # Compiled Object files
 *.slo
 *.lo
