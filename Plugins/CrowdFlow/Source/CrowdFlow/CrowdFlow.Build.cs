@@ -6,9 +6,9 @@ public class CrowdFlow : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		PublicDependencyModuleNames.AddRange(new string[] { "Core" });
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "AIModule" });
 
-		PrivateDependencyModuleNames.AddRange(new string[] { "CoreUObject", "Engine" });
+		PrivateDependencyModuleNames.AddRange(new string[] { "CoreUObject", "Engine"	});
        
 
 	}
