@@ -8,6 +8,8 @@
 #include "CFAgent.generated.h"
 
 class AAIController;
+class ACrowdFlowExitSign;
+class ACrowdFlowExitStaircase;
 UCLASS()
 class CROWDFLOW_API ACFAgent : public ACharacter
 {
@@ -17,10 +19,23 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = Agent)
 	float SameFloorHeightMargin = 200.f;
 
+	UPROPERTY(EditDefaultsOnly, Category = Agent)
+	float DirectMoveSearchRate = 0.5f;
+
+	bool FoundDirectMoveToExit = false;
+
 	FVector NearestExitLocation;
+
+	ACrowdFlowExitSign* ExitSignBeingFollowed = nullptr;
+	ACrowdFlowExitSign* LastFollowedExitSign = nullptr;
+
+	ACrowdFlowExitStaircase* CurrentStaircase = nullptr;
+
 
 	FAgentData AgentData;
 
+	FTimerHandle TH_GoAround;
+	FTimerHandle TH_DirectMove;
 
 public:	
 	// Sets default values for this actor's properties
@@ -29,11 +44,20 @@ public:
 	virtual void BeginPlay() override;
 
 	void StartSimulating();
-	void MoveToLocation(FVector& Loc);
+	void MoveToLocation(FVector Loc);
+	void StopMovement();
+	void BeginLookingForDirectMoveToFinalDestination();
+	void AttemptDirectMoveToFinalDestination();
+	bool IsFinalDestinationVisible();
 	FVector GetNearestExitLocation();
 	bool IsExitOnSameFloor(FVector ExitLocation) const;
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 	FVector GetFinalDestination() const;
+	virtual void SeeExitSign(ACrowdFlowExitSign* ExitSign);
+	bool IsExitSignBehind(ACrowdFlowExitSign* ExitSign) const;
+	void MoveDownStair(ACrowdFlowExitStaircase* Staircase);
+
+
 
 protected:
 

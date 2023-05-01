@@ -208,7 +208,7 @@ void ACrowdFlowAgent::ClearMoveQueue()
 	LastFollowedExitSign = ExitSignBeingFollowed;
 	if (ExitSignBeingFollowed)
 	{
-		ExitSignBeingFollowed->UnfollowSign(this);
+		//ExitSignBeingFollowed->UnfollowSign(this);
 	}
 	ExitSignBeingFollowed = nullptr;
 	CurrentUnitsLeft = 0;
@@ -248,14 +248,14 @@ void ACrowdFlowAgent::MoveToExit(ACrowdFlowExitSign* ExitSign)
 	if (ExitSignBeingFollowed)
 	{
 		// If there is a sign already being followed unfollow
-		ExitSignBeingFollowed->UnfollowSign(this);
+		//ExitSignBeingFollowed->UnfollowSign(this);
 		// Clean up cause of interrupting movement delegate
 		MovementFinishedDelegate.RemoveDynamic(this, &ACrowdFlowAgent::OnLeftExit);
 
 	}
 
-	ExitSignBeingFollowed = ExitSign;
-	ExitSignBeingFollowed->FollowSign(this);
+	//ExitSignBeingFollowed = ExitSign;
+	//ExitSignBeingFollowed->FollowSign(this);
 
 	if (ExitSignBeingFollowed)
 	{
@@ -505,7 +505,7 @@ void ACrowdFlowAgent::OnLeftExit()
 	MovementFinishedDelegate.RemoveDynamic(this, &ACrowdFlowAgent::OnLeftExit);
 
 	LastFollowedExitSign = ExitSignBeingFollowed;
-	ExitSignBeingFollowed->UnfollowSign(this);
+	//ExitSignBeingFollowed->UnfollowSign(this);
 	ExitSignBeingFollowed = nullptr;
 }
 

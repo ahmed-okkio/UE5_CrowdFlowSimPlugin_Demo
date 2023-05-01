@@ -32,7 +32,7 @@ protected:
 
 	
 	UPROPERTY(VisibleInstanceOnly, Category = "Exit Sign")
-	TArray<class ACrowdFlowAgent*> Agents;
+	TArray<class ACFAgent*> Agents;
 
 	UPROPERTY(EditInstanceOnly, Category = "Exit Sign")
 	bool KnownExit = false;
@@ -60,7 +60,7 @@ protected:
 	FTimerHandle TH_AgentTrace;
 
 	UPROPERTY(EditInstanceOnly, Category = "Exit Sign")
-	float AgentDestinationDistanceFromSign = 150.0f;
+	float DistancePastSign = 300.f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Exit Sign")
 	float TraceRate = 0.2f;
@@ -79,11 +79,11 @@ public:
 
 	bool IsKnownExit() const;
 
-	int32 GetAgentCount(ACrowdFlowAgent* CheckingAgent) const;
+	int32 GetAgentCount(ACFAgent* CheckingAgent) const;
 
-	void FollowSign(ACrowdFlowAgent* FollowingAgent);
+	void FollowSign(ACFAgent* FollowingAgent);
 
-	void UnfollowSign(ACrowdFlowAgent* FollowingAgent);
+	void UnfollowSign(ACFAgent* FollowingAgent);
 
 	
 
