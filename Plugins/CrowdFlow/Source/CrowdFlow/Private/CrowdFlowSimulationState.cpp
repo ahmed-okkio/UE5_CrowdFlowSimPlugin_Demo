@@ -43,7 +43,7 @@ FTimeHMS ACrowdFlowSimulationState::GetTimeInHMS()
 
 FTimeHMS ACrowdFlowSimulationState::GetTimeInHMS(float InSeconds)
 {
-    int32 TotalSeconds = FMath::FloorToInt(TimerInSeconds);
+    int32 TotalSeconds = FMath::FloorToInt(InSeconds);
     int32 Hours = TotalSeconds / 3600;
     int32 Minutes = (TotalSeconds % 3600) / 60;
     int32 RemainingSeconds = (TotalSeconds % 3600) % 60;
@@ -80,7 +80,7 @@ void ACrowdFlowSimulationState::WriteAgentDataToFile()
     FDateTime Now = FDateTime::Now();
 
     // Construct the output file path with the current date and time as part of the file name
-    FString OutputFilePath = FPaths::Combine(FPaths::ProjectDir(), FString::Printf(TEXT("Results/ResultData_%04d%02d%02d_%02d%02d%02d.csv"),
+    FString OutputFilePath = FPaths::Combine(FPaths::ProjectDir(), FString::Printf(TEXT("Results/%04d%02d%02d_%02d%02d%02d/"),
         Now.GetYear(), Now.GetMonth(), Now.GetDay(),
         Now.GetHour(), Now.GetMinute(), Now.GetSecond()));
 
@@ -112,9 +112,10 @@ void ACrowdFlowSimulationState::WriteAgentDataToFile()
                 Time.Hours, Time.Minutes, Time.Seconds, Speed);
             SpeedDataCSV += SpeedDataString;
         }
-        FString SpeedDataFilePath = FPaths::Combine(FPaths::ProjectDir(), FString::Printf(TEXT("Results/%s/%s_SpeedData.csv"), *FPaths::GetPath(OutputFilePath), *AgentData.AgentName));
+        FString SpeedDataFilePath = FPaths::Combine(OutputFilePath, FString::Printf(TEXT("%s_SpeedData.csv"), *AgentData.AgentName));
         FFileHelper::SaveStringToFile(SpeedDataCSV, *SpeedDataFilePath);
     }
-
+    OutputFilePath = FPaths::Combine(OutputFilePath, FString::Printf(TEXT("ResultData.csv")));
+    
     FFileHelper::SaveStringToFile(AgentDataCSV, *OutputFilePath);
 }

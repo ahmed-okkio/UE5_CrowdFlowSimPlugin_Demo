@@ -1,6 +1,0 @@
-AgentName,StartTime,EndTime,Duration,UnitsTravelled,AverageUnitsPerSecond,StartingDistanceFromDest
-BP_Agent_Male3,00:00:00,00:00:09,00:00:09,1.50,1517.11
-BP_Agent_Male,00:00:00,00:00:34,00:00:34,1.24,2717.72
-BP_Agent_Female,00:00:00,00:00:35,00:00:35,1.30,2861.30
-BP_Agent_Male2,00:00:00,00:00:41,00:00:41,1.42,2825.20
-BP_Agent_Female2,00:00:00,00:00:42,00:00:42,1.42,2731.04
