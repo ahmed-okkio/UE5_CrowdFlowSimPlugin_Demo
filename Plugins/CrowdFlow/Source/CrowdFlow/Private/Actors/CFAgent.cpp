@@ -4,6 +4,7 @@
 #include "Actors/CrowdFlowExitStaircase.h"
 #include "Actors/CrowdFlowFinalDestination.h"
 #include "AI/Navigation/NavQueryFilter.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "AIController.h"
 #include "CrowdFlowSimulationState.h"
 #include "Kismet/GameplayStatics.h"
@@ -24,6 +25,9 @@ void ACFAgent::BeginPlay()
         FinalDestination = AllActors[0]->GetActorLocation();
 
     }
+
+	SimState = Cast<ACrowdFlowSimulationState>(GetWorld()->GetGameState());
+	
 
 	StartSimulating();
 }
@@ -46,6 +50,15 @@ void ACFAgent::StopMovement()
 	}
 }
 
+void ACFAgent::RegisterSpeedAtTime()
+{
+	if(SimState)
+	{
+		float CurrentSpeed = GetMovementComponent()->Velocity.Size();
+		AgentData.SpeedTimeData.Add(SimState->GetTimeInSeconds(), CurrentSpeed);
+	}
+}
+
 void ACFAgent::StartSimulating()
 {
 	TArray<AActor*> AllActors;
@@ -57,15 +70,53 @@ void ACFAgent::StartSimulating()
 	}
 
 	NearestExitLocation = GetNearestExitLocation();
+	AgentData.AgentName = GetActorNameOrLabel();
 	AgentData.StartingDistanceFromDest = FVector::Distance(GetActorLocation(), FinalDestination);
 
-	if (ACrowdFlowSimulationState* SimState = Cast<ACrowdFlowSimulationState>(GetWorld()->GetGameState()))
+	if (SimState)
 	{
 		AgentData.StartTime = SimState->GetTimeInHMS();
 	}
 
+	GetWorld()->GetTimerManager().SetTimer(TH_TrackTime, this, &ACFAgent::RegisterSpeedAtTime, 1.f, true, 0);
+
     MoveToLocation(FinalDestination);
-	//BeginLookingForDirectMoveToFinalDestination();
+}
+
+void ACFAgent::EndSimulation()
+{
+	if (SimState)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(TH_TrackTime);
+
+		float TotalTimeSeconds = 0.0f;
+		float TotalDistance = 0.0f;
+
+		// Iterate through the map and calculate the distance traveled at each speed
+		for (auto& Pair : AgentData.SpeedTimeData)
+		{
+			float SpeedCmPerSecond = Pair.Value;
+			float TimeSeconds = Pair.Key;
+
+			TotalTimeSeconds += TimeSeconds;
+
+			// Calculate the distance traveled at this speed
+			float DistanceAtSpeed = SpeedCmPerSecond * TimeSeconds;
+			TotalDistance += DistanceAtSpeed;
+		}
+
+		// Calculate the average speed by dividing total distance by total time taken
+		float AverageSpeedCmPerSecond = TotalDistance / TotalTimeSeconds;
+
+		// Convert the average speed to cm/s
+		float AverageSpeedCmPerS = AverageSpeedCmPerSecond / 100.0f;
+		AgentData.AverageSpeed = AverageSpeedCmPerS;
+
+		AgentData.EndTime = SimState->GetTimeInHMS();
+		AgentData.Duration = AgentData.GetEvacuationDuration();
+		SimState->SubmitAgentData(AgentData);
+		Destroy();
+	}
 }
 
 void ACFAgent::BeginLookingForDirectMoveToFinalDestination()

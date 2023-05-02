@@ -2,7 +2,7 @@
 
 
 #include "CrowdFlowSimulationState.h"
-#include "Actors/CrowdFlowAgent.h"
+#include "Actors/CFAgent.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 #include "Kismet/GameplayStatics.h"
@@ -38,6 +38,11 @@ void ACrowdFlowSimulationState::ClearTimer()
 
 FTimeHMS ACrowdFlowSimulationState::GetTimeInHMS()
 {
+    return GetTimeInHMS(TimerInSeconds);
+}
+
+FTimeHMS ACrowdFlowSimulationState::GetTimeInHMS(float InSeconds)
+{
     int32 TotalSeconds = FMath::FloorToInt(TimerInSeconds);
     int32 Hours = TotalSeconds / 3600;
     int32 Minutes = (TotalSeconds % 3600) / 60;
@@ -56,12 +61,17 @@ void ACrowdFlowSimulationState::SubmitAgentData(FAgentData AgentData)
     AgentDataArray.Add(AgentData);
 
     TArray<AActor*> AllActors;
-    UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACrowdFlowAgent::StaticClass(), AllActors);
+    UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACFAgent::StaticClass(), AllActors);
 
     if (AllActors.Num() == 1)
     {
         WriteAgentDataToFile();
     }
+}
+
+float ACrowdFlowSimulationState::GetTimeInSeconds() const
+{
+    return TimerInSeconds;
 }
 
 void ACrowdFlowSimulationState::WriteAgentDataToFile()
@@ -70,28 +80,41 @@ void ACrowdFlowSimulationState::WriteAgentDataToFile()
     FDateTime Now = FDateTime::Now();
 
     // Construct the output file path with the current date and time as part of the file name
-    FString OutputFilePath = FPaths::Combine(FPaths::ProjectDir(), FString::Printf(TEXT("ResultData_%04d%02d%02d_%02d%02d%02d.csv"),
+    FString OutputFilePath = FPaths::Combine(FPaths::ProjectDir(), FString::Printf(TEXT("Results/ResultData_%04d%02d%02d_%02d%02d%02d.csv"),
         Now.GetYear(), Now.GetMonth(), Now.GetDay(),
         Now.GetHour(), Now.GetMinute(), Now.GetSecond()));
 
 
     FString OutputFileContents = TEXT("AgentName,StartTime,EndTime,Duration,UnitsTravelled,AverageUnitsPerSecond,StartingDistanceFromDest\n");
 
-    // Open the output file for writing
-    
+    FString AgentDataCSV = TEXT("AgentName,StartTime,EndTime,Duration,UnitsTravelled,AverageUnitsPerSecond,StartingDistanceFromDest\n");
+    FString SpeedDataCSVHeader = TEXT("Time (s),Duration (hh:mm:ss)\n");
+
     for (const FAgentData& AgentData : AgentDataArray)
     {
         // Format the agent data as a string and append it to the output file contents
-        FString AgentDataString = FString::Printf(TEXT("%s,%02d:%02d:%02d,%02d:%02d:%02d,%02d:%02d:%02d,%d,%.2f,%.2f\n"),
+        FString AgentDataString = FString::Printf(TEXT("%s,%02d:%02d:%02d,%02d:%02d:%02d,%02d:%02d:%02d,%.2f,%.2f\n"),
             *AgentData.AgentName,
             AgentData.StartTime.Hours, AgentData.StartTime.Minutes, AgentData.StartTime.Seconds,
             AgentData.EndTime.Hours, AgentData.EndTime.Minutes, AgentData.EndTime.Seconds,
             AgentData.Duration.Hours, AgentData.Duration.Minutes, AgentData.Duration.Seconds,
-            AgentData.UnitsTraveled,
-            AgentData.AverageUnitsPerSecond,
+            AgentData.AverageSpeed,
             AgentData.StartingDistanceFromDest);
-        OutputFileContents += AgentDataString;
+        AgentDataCSV += AgentDataString;
+
+        // Append speed data to a separate CSV file named after the agent
+        FString SpeedDataCSV = SpeedDataCSVHeader;
+        for (auto& SpeedTimePair : AgentData.SpeedTimeData)
+        {
+            FTimeHMS Time = GetTimeInHMS(SpeedTimePair.Key);
+            float Speed = SpeedTimePair.Value;
+            FString SpeedDataString = FString::Printf(TEXT("%02d:%02d:%02d,%.2f,\n"),
+                Time.Hours, Time.Minutes, Time.Seconds, Speed);
+            SpeedDataCSV += SpeedDataString;
+        }
+        FString SpeedDataFilePath = FPaths::Combine(FPaths::ProjectDir(), FString::Printf(TEXT("Results/%s/%s_SpeedData.csv"), *FPaths::GetPath(OutputFilePath), *AgentData.AgentName));
+        FFileHelper::SaveStringToFile(SpeedDataCSV, *SpeedDataFilePath);
     }
 
-    FFileHelper::SaveStringToFile(OutputFileContents, *OutputFilePath);
+    FFileHelper::SaveStringToFile(AgentDataCSV, *OutputFilePath);
 }

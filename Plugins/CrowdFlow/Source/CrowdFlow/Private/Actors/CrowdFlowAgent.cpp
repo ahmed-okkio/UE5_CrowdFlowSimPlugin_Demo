@@ -377,8 +377,8 @@ void ACrowdFlowAgent::MoveTillUnitAmount(FVector Direction)
 			{
 				AgentData.EndTime = SimState->GetTimeInHMS();
 				AgentData.Duration = AgentData.GetEvacuationDuration();
-				AgentData.UnitsTraveled = TotalUnits;
-				AgentData.AverageUnitsPerSecond = TotalUnits / AgentData.GetDurationInSeconds();
+				//AgentData.UnitsTraveled = TotalUnits;
+				//AgentData.AverageUnitsPerSecond = TotalUnits / AgentData.GetDurationInSeconds();
 				SimState->SubmitAgentData(AgentData);
 				Destroy();
 			}

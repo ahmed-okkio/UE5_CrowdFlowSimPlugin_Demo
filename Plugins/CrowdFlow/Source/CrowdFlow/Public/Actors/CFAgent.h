@@ -24,6 +24,8 @@ protected:
 
 	bool FoundDirectMoveToExit = false;
 
+	ACrowdFlowSimulationState* SimState = nullptr;
+
 	FVector NearestExitLocation;
 
 	ACrowdFlowExitSign* ExitSignBeingFollowed = nullptr;
@@ -36,6 +38,8 @@ protected:
 
 	FTimerHandle TH_GoAround;
 	FTimerHandle TH_DirectMove;
+	FTimerHandle TH_TrackTime;
+
 
 public:	
 	// Sets default values for this actor's properties
@@ -44,8 +48,12 @@ public:
 	virtual void BeginPlay() override;
 
 	void StartSimulating();
+	UFUNCTION(BlueprintCallable, Category = "Simulation")
+	void EndSimulation();
 	void MoveToLocation(FVector Loc);
 	void StopMovement();
+	UFUNCTION()
+	void RegisterSpeedAtTime();
 	void BeginLookingForDirectMoveToFinalDestination();
 	void AttemptDirectMoveToFinalDestination();
 	bool IsFinalDestinationVisible();

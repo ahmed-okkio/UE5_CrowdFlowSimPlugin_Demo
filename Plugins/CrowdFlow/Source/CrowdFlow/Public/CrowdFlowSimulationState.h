@@ -24,6 +24,11 @@ struct FTimeHMS
 		Seconds = InSeconds;
 	}
 
+	float GetTotalSeconds()
+	{
+		return Hours * 3600 + Minutes * 60 + Seconds;
+	}
+
 	UPROPERTY(BlueprintReadWrite, Category = "Time")
 	int32 Hours;
 
@@ -47,12 +52,11 @@ struct FAgentData
 
 	FTimeHMS Duration;
 
-	int32 UnitsTraveled = 0;
+	float AverageSpeed;
 
-	float AverageUnitsPerSecond;
+	TMap<float, float> SpeedTimeData;
 
 	float StartingDistanceFromDest;
-
 
 	FTimeHMS GetEvacuationDuration()
 	{
@@ -108,7 +112,11 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Time")
     FTimeHMS GetTimeInHMS();
 
+	FTimeHMS GetTimeInHMS(float InSeconds);
+
 	void SubmitAgentData(FAgentData AgentData);
+
+	float GetTimeInSeconds() const;
 
 	
 };
