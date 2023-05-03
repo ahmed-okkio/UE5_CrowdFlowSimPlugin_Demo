@@ -78,6 +78,8 @@ struct FAgentData
 	}
 };
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTImerTick,float,TimeInSeconds);
+
 /**
  * 
  */
@@ -98,7 +100,8 @@ protected:
 	void WriteAgentDataToFile();
 
 public:
-
+	UPROPERTY()
+	FTImerTick TimerTickDelegate;
 	void StartTimer();
 	
 	UFUNCTION()

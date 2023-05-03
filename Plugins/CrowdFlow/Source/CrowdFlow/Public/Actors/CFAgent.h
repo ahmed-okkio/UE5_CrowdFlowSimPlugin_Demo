@@ -53,7 +53,7 @@ public:
 	void MoveToLocation(FVector Loc);
 	void StopMovement();
 	UFUNCTION()
-	void RegisterSpeedAtTime();
+	void RegisterSpeedAtTime(float TimeInSeconds);
 	void BeginLookingForDirectMoveToFinalDestination();
 	void AttemptDirectMoveToFinalDestination();
 	bool IsFinalDestinationVisible();

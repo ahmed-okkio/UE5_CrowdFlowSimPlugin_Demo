@@ -50,13 +50,12 @@ void ACFAgent::StopMovement()
 	}
 }
 
-void ACFAgent::RegisterSpeedAtTime()
+void ACFAgent::RegisterSpeedAtTime(float TimeInSeconds)
 {
-	if(SimState)
-	{
-		float CurrentSpeed = GetMovementComponent()->Velocity.Size();
-		AgentData.SpeedTimeData.Add(SimState->GetTimeInSeconds(), CurrentSpeed);
-	}
+
+	float CurrentSpeed = GetMovementComponent()->Velocity.Size();
+	AgentData.SpeedTimeData.Add(TimeInSeconds, CurrentSpeed);
+	
 }
 
 void ACFAgent::StartSimulating()
@@ -75,10 +74,10 @@ void ACFAgent::StartSimulating()
 
 	if (SimState)
 	{
+		SimState->TimerTickDelegate.AddDynamic(this, &ACFAgent::RegisterSpeedAtTime);
 		AgentData.StartTime = SimState->GetTimeInHMS();
 	}
 
-	GetWorld()->GetTimerManager().SetTimer(TH_TrackTime, this, &ACFAgent::RegisterSpeedAtTime, 1.f, true, 0);
 
     MoveToLocation(FinalDestination);
 }

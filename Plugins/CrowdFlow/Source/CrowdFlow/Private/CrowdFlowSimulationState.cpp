@@ -23,6 +23,7 @@ void ACrowdFlowSimulationState::StartTimer()
 
 void ACrowdFlowSimulationState::TickTimer()
 {
+    TimerTickDelegate.Broadcast(TimerInSeconds);
 	TimerInSeconds += 1.f;
 }
 
