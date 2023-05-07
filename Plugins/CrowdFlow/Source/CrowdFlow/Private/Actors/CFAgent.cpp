@@ -37,7 +37,7 @@ void ACFAgent::MoveToLocation(FVector Loc)
     AAIController* AIController = Cast<AAIController>(GetController());
     if (AIController)
     {
-        AIController->MoveToLocation(Loc,105);
+        AIController->MoveToLocation(Loc,300);
     }
 }
 
