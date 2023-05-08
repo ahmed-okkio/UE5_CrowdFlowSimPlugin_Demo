@@ -8,6 +8,7 @@
 
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FSimulationStartDelegate);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FSimulationEndDelegate);
 class ACrowdFlowSimulationState;
 /**
  * 
