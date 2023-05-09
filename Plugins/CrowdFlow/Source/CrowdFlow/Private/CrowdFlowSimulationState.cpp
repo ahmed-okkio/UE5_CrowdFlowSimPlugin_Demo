@@ -66,6 +66,7 @@ void ACrowdFlowSimulationState::SubmitAgentData(FAgentData AgentData)
 
     if (AllActors.Num() == 1)
     {
+        OnSubmittingResults.Broadcast();
         WriteAgentDataToFile();
     }
 }
@@ -86,21 +87,27 @@ void ACrowdFlowSimulationState::WriteAgentDataToFile()
         Now.GetHour(), Now.GetMinute(), Now.GetSecond()));
 
 
-    FString OutputFileContents = TEXT("AgentName,StartTime,EndTime,Duration,UnitsTravelled,AverageUnitsPerSecond,StartingDistanceFromDest\n");
+    FString OutputFileContents = TEXT("Red L,Red R,Yellow L,Yellow C,Yellow R,Blue L,Blue CL,Blue CR,Blue R\n");
+    FString LaneUsageString = FString::Printf(TEXT("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f\n"),
+        LaneUsageData["Red_L"], LaneUsageData["Red_R"], LaneUsageData["Yellow_L"], LaneUsageData["Yellow_C"], LaneUsageData["Yellow_R"], LaneUsageData["Blue_L"], LaneUsageData["Blue_CL"], LaneUsageData["Blue_CR"], LaneUsageData["Blue_R"]);
+    FString LaneUsagePath = FPaths::Combine(OutputFilePath, FString::Printf(TEXT("LaneUsage.csv")));
+    OutputFileContents += LaneUsageString;
+    FFileHelper::SaveStringToFile(OutputFileContents, *LaneUsagePath);
 
-    FString AgentDataCSV = TEXT("AgentName,StartTime,EndTime,Duration,UnitsTravelled,AverageUnitsPerSecond,StartingDistanceFromDest\n");
-    FString SpeedDataCSVHeader = TEXT("Time (s),Duration (hh:mm:ss)\n");
+    FString AgentDataCSV = TEXT("AgentName,StartTime,EndTime,Duration,AverageUnitsPerSecond,StartingDistanceFromDest,Wait Time,Max Speed\n");
+    FString SpeedDataCSVHeader = TEXT("Time (s), Speed\n");
 
     for (const FAgentData& AgentData : AgentDataArray)
     {
         // Format the agent data as a string and append it to the output file contents
-        FString AgentDataString = FString::Printf(TEXT("%s,%02d:%02d:%02d,%02d:%02d:%02d,%02d:%02d:%02d,%.2f,%.2f\n"),
+        FString AgentDataString = FString::Printf(TEXT("%s,%02d:%02d:%02d,%02d:%02d:%02d,%02d:%02d:%02d,%.2f,%.2f,%.2f,%.2f\n"),
             *AgentData.AgentName,
             AgentData.StartTime.Hours, AgentData.StartTime.Minutes, AgentData.StartTime.Seconds,
             AgentData.EndTime.Hours, AgentData.EndTime.Minutes, AgentData.EndTime.Seconds,
             AgentData.Duration.Hours, AgentData.Duration.Minutes, AgentData.Duration.Seconds,
             AgentData.AverageSpeed,
-            AgentData.StartingDistanceFromDest);
+            AgentData.StartingDistanceFromDest,
+            AgentData.WaitTime,AgentData.MaxSpeed);
         AgentDataCSV += AgentDataString;
 
         // Append speed data to a separate CSV file named after the agent

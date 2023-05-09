@@ -53,6 +53,10 @@ struct FAgentData
 	FTimeHMS Duration;
 
 	float AverageSpeed;
+	
+	float WaitTime;
+
+	float MaxSpeed;
 
 	TMap<float, float> SpeedTimeData;
 
@@ -79,6 +83,8 @@ struct FAgentData
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTImerTick,float,TimeInSeconds);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FSubmittingResults);
+
 
 /**
  * 
@@ -97,11 +103,20 @@ protected:
 	TArray<FAgentData> AgentDataArray;
 
 	virtual void HandleBeginPlay() override;
-	void WriteAgentDataToFile();
 
 public:
 	UPROPERTY()
 	FTImerTick TimerTickDelegate;
+	UPROPERTY(BlueprintAssignable, Category = "Simulation")
+	FSubmittingResults OnSubmittingResults;
+
+	UPROPERTY(BlueprintReadWrite)
+	TMap<FString, float> LaneUsageData;
+
+
+	UFUNCTION(BlueprintCallable, Category = "Write File")
+	void WriteAgentDataToFile();
+
 	void StartTimer();
 	
 	UFUNCTION()

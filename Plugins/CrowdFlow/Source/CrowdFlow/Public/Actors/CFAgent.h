@@ -22,6 +22,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = Agent)
 	float DirectMoveSearchRate = 0.5f;
 
+	float WaitTime = 0.f;
 	bool FoundDirectMoveToExit = false;
 
 	ACrowdFlowSimulationState* SimState = nullptr;

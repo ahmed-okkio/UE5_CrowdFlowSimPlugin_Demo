@@ -37,7 +37,7 @@ void ACFAgent::MoveToLocation(FVector Loc)
     AAIController* AIController = Cast<AAIController>(GetController());
     if (AIController)
     {
-        AIController->MoveToLocation(Loc,200);
+        AIController->MoveToLocation(Loc,100);
     }
 }
 
@@ -54,6 +54,10 @@ void ACFAgent::RegisterSpeedAtTime(float TimeInSeconds)
 {
 
 	float CurrentSpeed = GetMovementComponent()->Velocity.Size();
+	if (CurrentSpeed < 50)
+	{
+		WaitTime += 1;
+	}
 	AgentData.SpeedTimeData.Add(TimeInSeconds, CurrentSpeed);
 	
 }
@@ -88,24 +92,17 @@ void ACFAgent::EndSimulation()
 	{
 		GetWorld()->GetTimerManager().ClearTimer(TH_TrackTime);
 
-		float TotalTimeSeconds = 0.0f;
-		float TotalDistance = 0.0f;
+		float TotalSpeed = 0.0f;
 
 		// Iterate through the map and calculate the distance traveled at each speed
 		for (auto& Pair : AgentData.SpeedTimeData)
 		{
 			float SpeedCmPerSecond = Pair.Value;
-			float TimeSeconds = Pair.Key;
-
-			TotalTimeSeconds += TimeSeconds;
-
-			// Calculate the distance traveled at this speed
-			float DistanceAtSpeed = SpeedCmPerSecond * TimeSeconds;
-			TotalDistance += DistanceAtSpeed;
+			TotalSpeed += SpeedCmPerSecond;
 		}
 
 		// Calculate the average speed by dividing total distance by total time taken
-		float AverageSpeedCmPerSecond = TotalDistance / TotalTimeSeconds;
+		float AverageSpeedCmPerSecond = TotalSpeed / AgentData.SpeedTimeData.Num();
 
 		// Convert the average speed to cm/s
 		float AverageSpeedCmPerS = AverageSpeedCmPerSecond / 100.0f;
@@ -113,6 +110,8 @@ void ACFAgent::EndSimulation()
 
 		AgentData.EndTime = SimState->GetTimeInHMS();
 		AgentData.Duration = AgentData.GetEvacuationDuration();
+		AgentData.WaitTime = WaitTime;
+		AgentData.MaxSpeed = GetMovementComponent()->GetMaxSpeed();
 		SimState->SubmitAgentData(AgentData);
 		Destroy();
 	}
