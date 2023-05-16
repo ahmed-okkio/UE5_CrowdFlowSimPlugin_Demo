@@ -5,5 +5,3 @@ The plugin aims to produce a basic and functional simulation tool while emphasiz
 the accuracy and performance of the simulation.
 
 This is part of a in progress final year dissertation project titled "3D ENGINES BEYOND GAMES: CROWD SIMULATION TOOL DEVELOPMENT WITH UNREAL ENGINE".
-ReadMe to be updated on project completion.
-
