@@ -2,7 +2,7 @@
 
 
 #include "CrowdFlowSimulationState.h"
-#include "Actors/CrowdFlowAgent.h"
+#include "Actors/CFAgent.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 #include "Kismet/GameplayStatics.h"
@@ -23,6 +23,7 @@ void ACrowdFlowSimulationState::StartTimer()
 
 void ACrowdFlowSimulationState::TickTimer()
 {
+    TimerTickDelegate.Broadcast(TimerInSeconds);
 	TimerInSeconds += 1.f;
 }
 
@@ -38,7 +39,12 @@ void ACrowdFlowSimulationState::ClearTimer()
 
 FTimeHMS ACrowdFlowSimulationState::GetTimeInHMS()
 {
-    int32 TotalSeconds = FMath::FloorToInt(TimerInSeconds);
+    return GetTimeInHMS(TimerInSeconds);
+}
+
+FTimeHMS ACrowdFlowSimulationState::GetTimeInHMS(float InSeconds)
+{
+    int32 TotalSeconds = FMath::FloorToInt(InSeconds);
     int32 Hours = TotalSeconds / 3600;
     int32 Minutes = (TotalSeconds % 3600) / 60;
     int32 RemainingSeconds = (TotalSeconds % 3600) % 60;
@@ -56,12 +62,18 @@ void ACrowdFlowSimulationState::SubmitAgentData(FAgentData AgentData)
     AgentDataArray.Add(AgentData);
 
     TArray<AActor*> AllActors;
-    UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACrowdFlowAgent::StaticClass(), AllActors);
+    UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACFAgent::StaticClass(), AllActors);
 
     if (AllActors.Num() == 1)
     {
+        OnSubmittingResults.Broadcast();
         WriteAgentDataToFile();
     }
+}
+
+float ACrowdFlowSimulationState::GetTimeInSeconds() const
+{
+    return TimerInSeconds;
 }
 
 void ACrowdFlowSimulationState::WriteAgentDataToFile()
@@ -70,28 +82,48 @@ void ACrowdFlowSimulationState::WriteAgentDataToFile()
     FDateTime Now = FDateTime::Now();
 
     // Construct the output file path with the current date and time as part of the file name
-    FString OutputFilePath = FPaths::Combine(FPaths::ProjectDir(), FString::Printf(TEXT("ResultData_%04d%02d%02d_%02d%02d%02d.csv"),
+    FString OutputFilePath = FPaths::Combine(FPaths::ProjectDir(), FString::Printf(TEXT("Results/%04d%02d%02d_%02d%02d%02d/"),
         Now.GetYear(), Now.GetMonth(), Now.GetDay(),
         Now.GetHour(), Now.GetMinute(), Now.GetSecond()));
 
 
-    FString OutputFileContents = TEXT("AgentName,StartTime,EndTime,Duration,UnitsTravelled,AverageUnitsPerSecond,StartingDistanceFromDest\n");
+    FString OutputFileContents = TEXT("Red L,Red R,Yellow L,Yellow C,Yellow R,Blue L,Blue CL,Blue CR,Blue R\n");
+    FString LaneUsageString = FString::Printf(TEXT("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f\n"),
+        LaneUsageData["Red_L"], LaneUsageData["Red_R"], LaneUsageData["Yellow_L"], LaneUsageData["Yellow_C"], LaneUsageData["Yellow_R"], LaneUsageData["Blue_L"], LaneUsageData["Blue_CL"], LaneUsageData["Blue_CR"], LaneUsageData["Blue_R"]);
+    FString LaneUsagePath = FPaths::Combine(OutputFilePath, FString::Printf(TEXT("LaneUsage.csv")));
+    OutputFileContents += LaneUsageString;
+    FFileHelper::SaveStringToFile(OutputFileContents, *LaneUsagePath);
 
-    // Open the output file for writing
-    
+    FString AgentDataCSV = TEXT("AgentName,StartTime,EndTime,Duration,AverageUnitsPerSecond,StartingDistanceFromDest,Wait Time,Max Speed\n");
+    FString SpeedDataCSVHeader = TEXT("Time (s), Speed\n");
+
     for (const FAgentData& AgentData : AgentDataArray)
     {
         // Format the agent data as a string and append it to the output file contents
-        FString AgentDataString = FString::Printf(TEXT("%s,%02d:%02d:%02d,%02d:%02d:%02d,%02d:%02d:%02d,%d,%.2f,%.2f\n"),
+        FString AgentDataString = FString::Printf(TEXT("%s,%02d:%02d:%02d,%02d:%02d:%02d,%02d:%02d:%02d,%.2f,%.2f,%.2f,%.2f\n"),
             *AgentData.AgentName,
             AgentData.StartTime.Hours, AgentData.StartTime.Minutes, AgentData.StartTime.Seconds,
             AgentData.EndTime.Hours, AgentData.EndTime.Minutes, AgentData.EndTime.Seconds,
             AgentData.Duration.Hours, AgentData.Duration.Minutes, AgentData.Duration.Seconds,
-            AgentData.UnitsTraveled,
-            AgentData.AverageUnitsPerSecond,
-            AgentData.StartingDistanceFromDest);
-        OutputFileContents += AgentDataString;
-    }
+            AgentData.AverageSpeed,
+            AgentData.StartingDistanceFromDest,
+            AgentData.WaitTime,AgentData.MaxSpeed);
+        AgentDataCSV += AgentDataString;
 
-    FFileHelper::SaveStringToFile(OutputFileContents, *OutputFilePath);
+        // Append speed data to a separate CSV file named after the agent
+        FString SpeedDataCSV = SpeedDataCSVHeader;
+        for (auto& SpeedTimePair : AgentData.SpeedTimeData)
+        {
+            FTimeHMS Time = GetTimeInHMS(SpeedTimePair.Key);
+            float Speed = SpeedTimePair.Value;
+            FString SpeedDataString = FString::Printf(TEXT("%02d:%02d:%02d,%.2f,\n"),
+                Time.Hours, Time.Minutes, Time.Seconds, Speed);
+            SpeedDataCSV += SpeedDataString;
+        }
+        FString SpeedDataFilePath = FPaths::Combine(OutputFilePath, FString::Printf(TEXT("%s_SpeedData.csv"), *AgentData.AgentName));
+        FFileHelper::SaveStringToFile(SpeedDataCSV, *SpeedDataFilePath);
+    }
+    OutputFilePath = FPaths::Combine(OutputFilePath, FString::Printf(TEXT("ResultData.csv")));
+    
+    FFileHelper::SaveStringToFile(AgentDataCSV, *OutputFilePath);
 }

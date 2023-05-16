@@ -183,6 +183,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 	int32 GetDistanceToFinalDestination();
 
+	UFUNCTION(BlueprintCallable, Category = "Movement")
+	FVector GetFinalDestination() const;
+
+
 	virtual void SeeExitSign(ACrowdFlowExitSign* ExitSign);
 
 	void MoveToExit(ACrowdFlowExitSign* ExitSign);

@@ -8,6 +8,7 @@
 
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FSimulationStartDelegate);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FSimulationEndDelegate);
 class ACrowdFlowSimulationState;
 /**
  * 
@@ -21,7 +22,6 @@ class CROWDFLOW_API ACrowdFlowGameMode : public AGameModeBase
 private:
 	bool bIsSimulationStarted = false;
 
-	bool DebugModeAll = false;
 
 protected:
 	ACrowdFlowSimulationState* SimState = nullptr;
@@ -35,6 +35,10 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Simulation")
 	bool StartSimulationOnBeginPlay = false;
 	FSimulationStartDelegate OnSimulationStart;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Simulation")
+	bool DebugModeAll = false;
+
 
 	UFUNCTION(BlueprintCallable, Category = Simulation)
 	void StartSimulation();

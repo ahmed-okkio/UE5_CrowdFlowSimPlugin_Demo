@@ -11,6 +11,7 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "Components/BillboardComponent.h"
 #include "Actors/CrowdFlowAgent.h"
+#include "Actors/CFAgent.h"
 #include "GameMode/CrowdFlowGameMode.h"
 
 // Sets default values
@@ -29,7 +30,6 @@ void ACrowdFlowExitSign::BeginPlay()
 {
 	Super::BeginPlay();
 
-	ExitSignAgentDestination = GetActorLocation() + (GetActorForwardVector() * AgentDestinationDistanceFromSign);
 	BeginTraceForAgents();
 }
 
@@ -115,7 +115,9 @@ void ACrowdFlowExitSign::TraceForAgents()
 
 		for (auto HitResult : HitResults)
 		{
-			ACrowdFlowAgent* Agent = Cast<ACrowdFlowAgent>(HitResult.GetActor());
+			//ACrowdFlowAgent* Agent = Cast<ACrowdFlowAgent>(HitResult.GetActor());
+			ACFAgent* Agent = Cast<ACFAgent>(HitResult.GetActor());
+
 			if (!Agent)
 
 			{
@@ -166,7 +168,7 @@ void ACrowdFlowExitSign::Tick(float DeltaTime)
 		}
 		else
 		{
-			//DrawDebugBox(GetWorld(), Center, DetectionRange, GetActorRotation().Quaternion(), KnownExit ? FColor::Emerald : FColor::Orange, false);
+			DrawDebugBox(GetWorld(), Center, DetectionRange, GetActorRotation().Quaternion(), KnownExit ? FColor::Emerald : FColor::Orange, false);
 		}
 	}
 
@@ -184,14 +186,14 @@ void ACrowdFlowExitSign::Tick(float DeltaTime)
 		}
 		else
 		{
-			DrawDebugBox(GetWorld(), Center, DetectionRange, GetActorRotation().Quaternion(), KnownExit ? FColor::Emerald : FColor::Orange, false);
+			DrawDebugBox(GetWorld(), Center, PhysicalExitBounds, GetActorRotation().Quaternion(), FColor::Silver, false);
 		}
 	}
 }
 
 FVector ACrowdFlowExitSign::GetExitSignDestination() const
 {
-	return (GetActorLocation() + PhysicalExitOffset) + GetActorForwardVector() * PhysicalExitBounds.X;
+	return ((GetActorLocation() + PhysicalExitOffset) + GetActorForwardVector() * PhysicalExitBounds.X) + (-GetActorForwardVector() * DistancePastSign);
 }
 
 bool ACrowdFlowExitSign::IsKnownExit() const
@@ -199,7 +201,7 @@ bool ACrowdFlowExitSign::IsKnownExit() const
 	return KnownExit;
 }
 
-int32 ACrowdFlowExitSign::GetAgentCount(ACrowdFlowAgent* CheckingAgent) const
+int32 ACrowdFlowExitSign::GetAgentCount(ACFAgent* CheckingAgent) const
 {
 	if (Agents.Contains(CheckingAgent))
 	{
@@ -211,12 +213,12 @@ int32 ACrowdFlowExitSign::GetAgentCount(ACrowdFlowAgent* CheckingAgent) const
 
 }
 
-void ACrowdFlowExitSign::FollowSign(ACrowdFlowAgent* FollowingAgent) 
+void ACrowdFlowExitSign::FollowSign(ACFAgent* FollowingAgent)
 {
 	Agents.AddUnique(FollowingAgent);
 }
 
-void ACrowdFlowExitSign::UnfollowSign(ACrowdFlowAgent* FollowingAgent)
+void ACrowdFlowExitSign::UnfollowSign(ACFAgent* FollowingAgent)
 {
 	Agents.Remove(FollowingAgent);
 }

@@ -36,8 +36,9 @@ void ACrowdFlowAgent::BeginPlay()
 	GameMode = Cast<ACrowdFlowGameMode>(GetWorld()->GetAuthGameMode());
 	if (GameMode)
 	{
-		GameMode->OnSimulationStart.AddDynamic(this, &ACrowdFlowAgent::StartSimulating);
+		//GameMode->OnSimulationStart.AddDynamic(this, &ACrowdFlowAgent::StartSimulating);
 	}
+
 }
 
 void ACrowdFlowAgent::StartSimulating()
@@ -207,7 +208,7 @@ void ACrowdFlowAgent::ClearMoveQueue()
 	LastFollowedExitSign = ExitSignBeingFollowed;
 	if (ExitSignBeingFollowed)
 	{
-		ExitSignBeingFollowed->UnfollowSign(this);
+		//ExitSignBeingFollowed->UnfollowSign(this);
 	}
 	ExitSignBeingFollowed = nullptr;
 	CurrentUnitsLeft = 0;
@@ -247,14 +248,14 @@ void ACrowdFlowAgent::MoveToExit(ACrowdFlowExitSign* ExitSign)
 	if (ExitSignBeingFollowed)
 	{
 		// If there is a sign already being followed unfollow
-		ExitSignBeingFollowed->UnfollowSign(this);
+		//ExitSignBeingFollowed->UnfollowSign(this);
 		// Clean up cause of interrupting movement delegate
 		MovementFinishedDelegate.RemoveDynamic(this, &ACrowdFlowAgent::OnLeftExit);
 
 	}
 
-	ExitSignBeingFollowed = ExitSign;
-	ExitSignBeingFollowed->FollowSign(this);
+	//ExitSignBeingFollowed = ExitSign;
+	//ExitSignBeingFollowed->FollowSign(this);
 
 	if (ExitSignBeingFollowed)
 	{
@@ -376,8 +377,8 @@ void ACrowdFlowAgent::MoveTillUnitAmount(FVector Direction)
 			{
 				AgentData.EndTime = SimState->GetTimeInHMS();
 				AgentData.Duration = AgentData.GetEvacuationDuration();
-				AgentData.UnitsTraveled = TotalUnits;
-				AgentData.AverageUnitsPerSecond = TotalUnits / AgentData.GetDurationInSeconds();
+				//AgentData.UnitsTraveled = TotalUnits;
+				//AgentData.AverageUnitsPerSecond = TotalUnits / AgentData.GetDurationInSeconds();
 				SimState->SubmitAgentData(AgentData);
 				Destroy();
 			}
@@ -504,7 +505,7 @@ void ACrowdFlowAgent::OnLeftExit()
 	MovementFinishedDelegate.RemoveDynamic(this, &ACrowdFlowAgent::OnLeftExit);
 
 	LastFollowedExitSign = ExitSignBeingFollowed;
-	ExitSignBeingFollowed->UnfollowSign(this);
+	//ExitSignBeingFollowed->UnfollowSign(this);
 	ExitSignBeingFollowed = nullptr;
 }
 
@@ -742,15 +743,15 @@ void ACrowdFlowAgent::OnFoundRightMostWall()
 
 void ACrowdFlowAgent::SeeExitSign(ACrowdFlowExitSign* ExitSign)
 {
-	if (!ExitSign || FoundDirectMoveToExit)
-	{
-		return;
-	}
+	//if (!ExitSign || FoundDirectMoveToExit)
+	//{
+	//	return;
+	//}
 
-	if (ExitSign->IsKnownExit())
-	{
-		MoveToExit(ExitSign);
-	}
+	//if (ExitSign->IsKnownExit())
+	//{
+	//	MoveToExit(ExitSign);
+	//}
 }
 
 FVector ACrowdFlowAgent::GetNearestExitLocation()
@@ -802,6 +803,11 @@ int32 ACrowdFlowAgent::GetCurrentUnitsLeft()
 int32 ACrowdFlowAgent::GetDistanceToFinalDestination()
 {
 	return FVector::Distance(GetActorLocation(), FinalDestination);
+}
+
+FVector ACrowdFlowAgent::GetFinalDestination() const
+{
+	return FinalDestination;
 }
 
 bool ACrowdFlowAgent::IsWaitingForStairCase() const

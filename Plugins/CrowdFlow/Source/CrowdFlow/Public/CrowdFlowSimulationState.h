@@ -24,6 +24,11 @@ struct FTimeHMS
 		Seconds = InSeconds;
 	}
 
+	float GetTotalSeconds()
+	{
+		return Hours * 3600 + Minutes * 60 + Seconds;
+	}
+
 	UPROPERTY(BlueprintReadWrite, Category = "Time")
 	int32 Hours;
 
@@ -47,12 +52,15 @@ struct FAgentData
 
 	FTimeHMS Duration;
 
-	int32 UnitsTraveled = 0;
+	float AverageSpeed;
+	
+	float WaitTime;
 
-	float AverageUnitsPerSecond;
+	float MaxSpeed;
+
+	TMap<float, float> SpeedTimeData;
 
 	float StartingDistanceFromDest;
-
 
 	FTimeHMS GetEvacuationDuration()
 	{
@@ -74,6 +82,10 @@ struct FAgentData
 	}
 };
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTImerTick,float,TimeInSeconds);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FSubmittingResults);
+
+
 /**
  * 
  */
@@ -91,9 +103,19 @@ protected:
 	TArray<FAgentData> AgentDataArray;
 
 	virtual void HandleBeginPlay() override;
-	void WriteAgentDataToFile();
 
 public:
+	UPROPERTY()
+	FTImerTick TimerTickDelegate;
+	UPROPERTY(BlueprintAssignable, Category = "Simulation")
+	FSubmittingResults OnSubmittingResults;
+
+	UPROPERTY(BlueprintReadWrite)
+	TMap<FString, float> LaneUsageData;
+
+
+	UFUNCTION(BlueprintCallable, Category = "Write File")
+	void WriteAgentDataToFile();
 
 	void StartTimer();
 	
@@ -108,7 +130,11 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Time")
     FTimeHMS GetTimeInHMS();
 
+	FTimeHMS GetTimeInHMS(float InSeconds);
+
 	void SubmitAgentData(FAgentData AgentData);
+
+	float GetTimeInSeconds() const;
 
 	
 };

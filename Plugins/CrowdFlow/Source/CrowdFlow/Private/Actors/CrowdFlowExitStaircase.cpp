@@ -3,6 +3,7 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "Components/BillboardComponent.h"
 #include "Actors/CrowdFlowAgent.h"	
+#include "Actors/CFAgent.h"	
 #include "Actors/CrowdFlowExitStaircase.h"
 #include "GameMode/CrowdFlowGameMode.h"
 
@@ -67,15 +68,7 @@ void ACrowdFlowExitStaircase::Tick(float DeltaTime)
 
 		FVector Center = SpriteComponent->GetComponentLocation();
 
-		ACrowdFlowGameMode* GM = Cast<ACrowdFlowGameMode>(GetWorld()->GetAuthGameMode());
-
-		if (GM)
-		{
-			if (GM->GetDebugMode())
-			{
-				DrawDebugBox(GetWorld(), Center, BoundingBox, GetActorRotation().Quaternion(), FColor::Green, false, 0.f, DepthPriority, 5);
-			}
-		}
+		DrawDebugBox(GetWorld(), Center, BoundingBox, GetActorRotation().Quaternion(), FColor::Green, false, 0.f, DepthPriority, 5);
 	}
 
 }
@@ -128,7 +121,7 @@ void ACrowdFlowExitStaircase::TraceForAgents()
 	
 	for (auto HitResult : HitResults)
 	{
-		ACrowdFlowAgent* Agent = Cast<ACrowdFlowAgent>(HitResult.GetActor());
+		ACFAgent* Agent = Cast<ACFAgent>(HitResult.GetActor());
 
 		if (!Agent)
 		{

@@ -19,10 +19,10 @@ void ACrowdFlowAgentATC::SeeExitSign(ACrowdFlowExitSign* ExitSign)
 		return;
 	}
 
-	if (ExitSign->GetAgentCount(this) < ExitSignBeingFollowed->GetAgentCount(this))
-	{
-		MoveToExit(ExitSign);
-	}
+	//if (ExitSign->GetAgentCount(this) < ExitSignBeingFollowed->GetAgentCount(this))
+	//{
+		//MoveToExit(ExitSign);
+	//}
 
 	/*else if (ExitSign->GetAgentCount(this) == ExitSignBeingFollowed->GetAgentCount(this))
 	{
