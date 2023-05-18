@@ -5,4 +5,5 @@ The plugin aims to produce a basic and functional simulation tool while emphasiz
 the accuracy and performance of the simulation.
 
 This is part of a in progress final year dissertation project titled "3D ENGINES BEYOND GAMES: CROWD SIMULATION TOOL DEVELOPMENT WITH UNREAL ENGINE".
+
 *The last pull request merged a new implementation using NavMesh, A\* and RVO2. This comes with the new class CFAgent*
