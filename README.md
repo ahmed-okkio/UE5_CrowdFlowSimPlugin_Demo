@@ -4,6 +4,6 @@ The goal is to show a non gaming application of Unreal Engine by developing an A
 The plugin aims to produce a basic and functional simulation tool while emphasizing on the development experience and work flow of Unreal Engine not
 the accuracy and performance of the simulation.
 
-This is part of a in progress final year dissertation project titled "3D ENGINES BEYOND GAMES: CROWD SIMULATION TOOL DEVELOPMENT WITH UNREAL ENGINE".
+This is part of a final year dissertation project titled "3D ENGINES BEYOND GAMES: CROWD SIMULATION TOOL DEVELOPMENT WITH UNREAL ENGINE".
 
-*The last pull request merged a new implementation using NavMesh, A\* and RVO2. This comes with the new class CFAgent*
+*The last pull request merged a new implementation using NavMesh, A\* and RVO2. This comes with the new class CFAgent. The bulk of the source code is under the Plugins/Source folder*
